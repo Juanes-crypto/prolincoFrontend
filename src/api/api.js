@@ -2,9 +2,10 @@
 
 import axios from 'axios';
 
-// 1. Configuración de la URL base de la API
+const RENDER_API_URL = 'https://prolincobackend.onrender.com/api'; // <--- ¡CAMBIA ESTA URL!
+
 const API = axios.create({
-    baseURL: 'http://localhost:5000/api', // Usamos el puerto 5000 que está corriendo
+    baseURL: RENDER_API_URL, 
 });
 
 // 2. Interceptor para agregar el token JWT a todas las solicitudes
