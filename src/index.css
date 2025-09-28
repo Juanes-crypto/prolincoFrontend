@@ -1,0 +1,12 @@
+/* frontend/src/index.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Opcional: Estilo de transición para un efecto de carga suave */
+@layer base {
+  body {
+    @apply antialiased text-prolinco-dark;
+  }
+}
