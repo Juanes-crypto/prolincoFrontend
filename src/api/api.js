@@ -2,10 +2,9 @@
 
 import axios from 'axios';
 
-const RENDER_API_URL = 'https://prolincobackend.onrender.com/api'; // <--- ¡CAMBIA ESTA URL!
-
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://prolincobackend.onrender.com/api'; 
 const API = axios.create({
-    baseURL: RENDER_API_URL, 
+    baseURL: API_BASE_URL, 
 });
 
 // 2. Interceptor para agregar el token JWT a todas las solicitudes
