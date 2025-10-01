@@ -1,6 +1,6 @@
 // frontend/src/context/AuthProvider.jsx (Anteriormente AuthContext.jsx)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 // 🌟 IMPORTAMOS el Contexto desde el nuevo archivo de definición
 import { AuthContext } from "./AuthContextDefinition";
 
@@ -69,9 +69,13 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-// ⚠️ NO EXPORTES AuthContext aquí, solo AuthProvider
-export default AuthProvider;
 
 export const useAuth = () => {
-    return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth debe ser usado dentro de un AuthProvider");
+  }
+  return context;
 };
+
+export default AuthProvider;

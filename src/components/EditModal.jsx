@@ -1,73 +1,84 @@
 // frontend/src/components/EditModal.jsx
 
-import React, { useState, useEffect } from 'react';
-import Card from './Card'; // Asegúrate de que el path sea correcto
-import { PencilIcon, XMarkIcon , ArrowDownTrayIcon, LinkIcon } from '@heroicons/react/24/solid';
+import React, { useState, useEffect, useCallback } from 'react';
+import Card from './Card';
+import { PencilIcon, XMarkIcon, ArrowDownTrayIcon, LinkIcon } from '@heroicons/react/24/solid';
 import { API } from '../api/api';
 
-/**
- * Componente Modal Reusable para la edición de Contenido (Texto o URL).
- * * @param {object} props
- * @param {string} type - 'text' o 'url'
- * @param {string} section - El endpoint del contenido (e.g., 'admin', 'talento', 'organizacional')
- * @param {object} editingData - { field: 'campo', value: 'valor inicial', currentUrl: 'url actual' }
- * @param {function} onComplete - Función que se llama al guardar (para actualizar el estado padre)
- * @param {function} onClose - Función para cerrar el modal y limpiar el estado padre
- */
 const EditModal = ({ type, section, editingData, onComplete, onClose }) => {
-    
-    // Si no hay datos de edición, no renderizar el modal
+    // ✅ MEJOR: Verificación temprana para no renderizar
     if (!editingData || !editingData.field) return null;
     
-    const [localValue, setLocalValue] = useState(editingData.value || editingData.currentUrl || '');
+    const [localValue, setLocalValue] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
-    // Sincronizar el valor inicial cada vez que cambian los datos de edición
+
+    // ✅ useEffect CORREGIDO - Solo se ejecuta cuando editingData cambia
     useEffect(() => {
-        setLocalValue(editingData.value || editingData.currentUrl || '');
-        setError(null);
-    }, [editingData]);
+        if (editingData) {
+            setLocalValue(editingData.value || editingData.currentUrl || editingData.url || '');
+            setError(null);
+        }
+    }, [editingData]); // Dependencia correcta
 
-
-    // Función para manejar el guardado (funciona para texto y URL)
-    const handleSave = async (e) => {
+    // ✅ useCallback para evitar recreaciones
+    const handleSave = useCallback(async (e) => {
         e.preventDefault();
+        
+        // ✅ Validación adicional
+        if (!editingData?.field) {
+            setError('Datos de edición inválidos');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
-        const { field } = editingData;
+        const { field, toolKey } = editingData;
         let payload = {};
         
-        // Lógica especial para los valores corporativos (separados por coma)
-        if (section === 'organizacional' && field === 'corporateValues') {
-            payload[field] = localValue.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        // Usar toolKey si está disponible (para URLs), sino field
+        const actualField = toolKey || field;
+        
+        // Lógica especial para los valores corporativos
+        if (section === 'organizacional' && actualField === 'corporateValues') {
+            payload[actualField] = localValue.split(',').map(item => item.trim()).filter(item => item.length > 0);
         } else {
-            payload[field] = localValue;
+            payload[actualField] = localValue;
         }
 
         try {
-            // Endpoint para la actualización. 
-            // Usa el token que debe estar en la configuración de la API o localStorage.
-            await API.put(`/content/${section}`, payload);
+            // ✅ Endpoint corregido - usar section en minúsculas para coincidir con backend
+            const endpointSection = section.toLowerCase().replace(' ', '-');
+            await API.put(`/content/${endpointSection}`, payload);
             
-            // Llamar a la función de completado para que el componente padre actualice su estado
+            // ✅ Llamar a onComplete con el payload correcto
             onComplete(payload);
-
-            alert(`${editingData.toolName || field} actualizado con éxito.`);
-            onClose(); // Cerrar el modal
             
-        } catch (_err) { // Usamos _err para evitar la advertencia de 'err definido pero no usado'
-            setError(_err.response?.data?.message || 'Error al actualizar el contenido. Verifique el backend.');
-            console.error('Error al guardar:', _err);
+            alert(`${editingData.toolName || field} actualizado con éxito.`);
+            onClose();
+            
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Error al actualizar el contenido. Verifique el backend.';
+            setError(errorMessage);
+            console.error('Error al guardar:', err);
         } finally {
             setLoading(false);
         }
-    };
-    
-    // Determinar el título y el tipo de input
+    }, [localValue, editingData, section, onComplete, onClose]);
+
+    const handleClose = useCallback(() => {
+        setError(null);
+        setLoading(false);
+        onClose();
+    }, [onClose]);
+
+    // ✅ Determinar el título y el tipo de input
     const isUrl = type === 'url';
-    const modalTitle = isUrl ? `Editar URL: ${editingData.toolName}` : `Editar: ${editingData.field.toUpperCase()}`;
+    const modalTitle = isUrl 
+        ? `Editar URL: ${editingData.toolName || editingData.field}`
+        : `Editar: ${editingData.field.toUpperCase()}`;
+
     const inputComponent = isUrl ? 
         (
             <input
@@ -89,7 +100,6 @@ const EditModal = ({ type, section, editingData, onComplete, onClose }) => {
             ></textarea>
         );
 
-
     return (
         <div className="fixed inset-0 bg-prolinco-dark bg-opacity-70 flex items-center justify-center z-50 transition-opacity duration-300">
             <Card 
@@ -99,7 +109,11 @@ const EditModal = ({ type, section, editingData, onComplete, onClose }) => {
                 className="w-full max-w-2xl"
                 hoverEffect={false}
             >
-                {error && <p className="text-red-500 mb-4 font-semibold p-2 border border-red-200 rounded-lg">{error}</p>}
+                {error && (
+                    <p className="text-red-500 mb-4 font-semibold p-2 border border-red-200 rounded-lg">
+                        {error}
+                    </p>
+                )}
                 
                 <form onSubmit={handleSave}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -110,16 +124,19 @@ const EditModal = ({ type, section, editingData, onComplete, onClose }) => {
                     {inputComponent}
                     
                     {isUrl && editingData.currentUrl && (
-                        <p className="mt-2 text-xs text-gray-500 truncate">Actual: {editingData.currentUrl}</p>
+                        <p className="mt-2 text-xs text-gray-500 truncate">
+                            Actual: {editingData.currentUrl}
+                        </p>
                     )}
                     
                     <div className="flex justify-end space-x-4 mt-6">
                         <button
                             type="button"
-                            onClick={onClose}
-                            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-prolinco-dark hover:bg-gray-100 transition duration-150"
+                            onClick={handleClose}
+                            disabled={loading}
+                            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-prolinco-dark hover:bg-gray-100 transition duration-150 disabled:opacity-50"
                         >
-                            <XMarkIcon  className="h-5 w-5 mr-2" />
+                            <XMarkIcon className="h-5 w-5 mr-2" />
                             Cancelar
                         </button>
                         <button

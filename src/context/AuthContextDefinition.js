@@ -1,6 +1,4 @@
-// frontend/src/context/AuthContextDefinition.js
-
+// frontend/src/context/AuthContextDefinition.jsx
 import { createContext } from 'react';
 
-// 1. Crear el Contexto
-export const AuthContext = createContext();
+export const AuthContext = createContext(undefined);

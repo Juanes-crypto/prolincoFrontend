@@ -4,27 +4,32 @@ import React, { useState, useEffect } from 'react';
 import { API } from '../api/api';
 import { ClockIcon, ClipboardListIcon } from '@heroicons/react/solid';
 import Card from '../components/Card';
-import moment from 'moment'; // Necesitas instalar moment para formato de fecha
-// npm install moment
+import moment from 'moment';
+import { useAuth } from '../context/AuthProvider'; // ✅ Usar nuestro hook corregido
+
+const sections = [
+    { key: 'organizacional', name: 'Identidad Organizacional (Misión/Visión)' },
+    { key: 'admin', name: 'Diagnóstico y Objetivos (Administración)' },
+    { key: 'servicio', name: 'Diagnóstico y Objetivos (Servicio al Cliente)' },
+    { key: 'talento', name: 'Diagnóstico y Objetivos (Talento Humano)' },
+];
 
 const History = () => {
-    // Solo permitir acceso si el rol es 'admin'
-    const userRole = localStorage.getItem('userRole');
-    if (userRole !== 'admin') {
-        return <div className="p-10 text-red-600 font-bold">Acceso denegado. Solo el rol Administrador puede acceder a la Auditoría.</div>;
-    }
-
-    const sections = [
-        { key: 'organizacional', name: 'Identidad Organizacional (Misión/Visión)' },
-        { key: 'admin', name: 'Diagnóstico y Objetivos (Administración)' },
-        { key: 'servicio', name: 'Diagnóstico y Objetivos (Servicio al Cliente)' },
-        { key: 'talento', name: 'Diagnóstico y Objetivos (Talento Humano)' },
-    ];
+    const { user } = useAuth(); // ✅ Usar el contexto de autenticación
 
     const [selectedSection, setSelectedSection] = useState(sections[0].key);
     const [historyData, setHistoryData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // ✅ VERIFICACIÓN CORRECTA: Después de los hooks
+    if (user?.role !== "admin") {
+        return (
+            <div className="p-10 text-red-600 font-bold">
+                Acceso denegado. Solo el rol Administrador puede acceder a la Auditoría.
+            </div>
+        );
+    }
 
     // 1. Lógica de Carga de Historial
     useEffect(() => {
@@ -32,7 +37,7 @@ const History = () => {
             setLoading(true);
             setHistoryData([]);
             setError(null);
-            
+
             try {
                 // Usamos el endpoint GET /api/content/:section/history que creamos en el backend
                 const response = await API.get(`/content/${selectedSection}/history`);
@@ -49,7 +54,6 @@ const History = () => {
             fetchHistory();
         }
     }, [selectedSection]);
-
 
     return (
         <div className="animate-fadeIn">
@@ -84,7 +88,6 @@ const History = () => {
 
             {/* Contenido del Historial */}
             <Card title={`Historial de Cambios: ${sections.find(s => s.key === selectedSection)?.name}`} icon={ClipboardListIcon} hoverEffect={false}>
-                
                 {loading && <p className="text-center py-8">Cargando historial...</p>}
                 {error && <p className="text-center py-8 text-red-600 font-semibold">{error}</p>}
 
@@ -125,7 +128,6 @@ const History = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {/* Formato de fecha con moment */}
                                             {moment(record.changeDate).format('YYYY-MM-DD HH:mm')}
                                         </td>
                                     </tr>
