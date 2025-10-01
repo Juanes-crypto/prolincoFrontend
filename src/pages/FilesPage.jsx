@@ -5,8 +5,7 @@ import DocumentUpload from "../components/DocumentUpload";
 import { API } from '../api/api';
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/solid"; 
 // ✅ NUEVA IMPORTACIÓN: Importar el hook para acceder al usuario y su rol
-import { useAuth } from '../context/AuthContext'; 
-
+import { useAuth } from '../context/AuthProvider'; 
 const FilesPage = () => {
   // ✅ NUEVO USO: Obtener el usuario del contexto
   const { user } = useAuth();
