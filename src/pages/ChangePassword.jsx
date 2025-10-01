@@ -1,10 +1,9 @@
 // frontend/src/pages/ChangePassword.jsx (FINAL Y LIMPIO)
 
 import React, { useState, useContext } from "react"; // Eliminamos useEffect si no lo usamos
-import axios from "axios";
+import { API } from '../api/api'; 
 import { useNavigate, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContextDefinition"; 
-const API_URL = "http://localhost:5000/api/users";
 
 const ChangePassword = () => {
     const navigate = useNavigate();
@@ -72,8 +71,9 @@ const ChangePassword = () => {
                 },
             };
 
-            const response = await axios.put(
-                API_URL + "/change-password",
+            // 🌟 CAMBIO: Usamos API.put y solo la ruta relativa
+            const response = await API.put(
+                "/users/change-password", // La ruta completa será: baseURL/api/users/change-password
                 { password },
                 config
             );
@@ -83,8 +83,9 @@ const ChangePassword = () => {
             setUser({
                 ...user,
                 isPasswordSet: true,
-            }); // 2. 🌟 Redirección forzada con Recarga: ESTO DEBE ROMPER EL BUCLE 🌟
-
+            }); 
+            
+            // 2. Redirección forzada con Recarga
             setTimeout(() => {
                 window.location.href = "/";
             }, 100);
@@ -105,8 +106,7 @@ const ChangePassword = () => {
         } finally {
             setLoading(false);
         }
-    }; // Si por alguna razón el usuario es null (ej. el AuthGuard no lo atrapó),
-
+    }; 
     // mostramos null temporalmente para evitar errores en el JSX.
     if (!user) {
         return null;

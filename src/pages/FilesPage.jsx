@@ -1,18 +1,23 @@
-// frontend/src/pages/FilesPage.jsx (Versión completa, busca los NUEVOS bloques)
+// frontend/src/pages/FilesPage.jsx
 
-import React, { useState, useEffect } from "react"; // ✅ Importar useState y useEffect
+import React, { useState, useEffect } from "react"; 
 import DocumentUpload from "../components/DocumentUpload";
-import axios from "axios";
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/solid"; // ✅ Iconos para acciones
-
-const API_URL = "http://localhost:5000/api/documents/";
+import { API } from '../api/api';
+import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/solid"; 
+// ✅ NUEVA IMPORTACIÓN: Importar el hook para acceder al usuario y su rol
+import { useAuth } from '../context/AuthContext'; 
 
 const FilesPage = () => {
-  // ✅ NUEVOS ESTADOS
+  // ✅ NUEVO USO: Obtener el usuario del contexto
+  const { user } = useAuth();
+    
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const token = localStorage.getItem("userToken");
+    
+  // ✅ NUEVA LÓGICA: Determinar si el usuario es administrador
+  const isAdmin = user && user.role === 'admin';
 
   // Función para obtener los documentos
   const fetchDocuments = async () => {
@@ -28,7 +33,9 @@ const FilesPage = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-      const response = await axios.get(API_URL, config);
+      
+      const response = await API.get("/documents", config);
+      
       setDocuments(response.data);
       setError("");
     } catch (err) {
@@ -58,29 +65,23 @@ const FilesPage = () => {
     }
 
     try {
-      // ⚠️ Llamada GET al endpoint de descarga
-      const response = await axios({
-        url: `${API_URL}${documentId}/download`,
+      const response = await API({
+        url: `/documents/${documentId}/download`, 
         method: "GET",
-        responseType: "blob", // CLAVE: Le decimos a Axios que espere un archivo binario
+        responseType: "blob", 
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // 1. Crear una URL local temporal para el archivo
       const url = window.URL.createObjectURL(new Blob([response.data]));
-
-      // 2. Crear un elemento <a> invisible para simular el click de descarga
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", fileName); // Establece el nombre de archivo a descargar
+      link.setAttribute("download", fileName); 
       document.body.appendChild(link);
-      link.click(); // Dispara la descarga
-
-      // 3. Limpieza
+      link.click(); 
       link.remove();
-      window.URL.revokeObjectURL(url); // Libera la memoria del objeto Blob
+      window.URL.revokeObjectURL(url); 
     } catch (error) {
       console.error("Error al descargar el documento:", error);
       alert(
@@ -90,12 +91,12 @@ const FilesPage = () => {
   };
 
   const handleDeleteDocument = async (documentId, fileName) => {
+    // La lógica de eliminación permanece igual, pero el botón solo se muestra a admins.
     if (!token) {
       alert("Sesión expirada. Por favor, inicia sesión.");
       return;
     }
 
-    // Pedir confirmación al usuario
     if (
       !window.confirm(
         `¿Estás seguro de que quieres eliminar el documento "${fileName}"? Esta acción es irreversible.`
@@ -111,10 +112,8 @@ const FilesPage = () => {
         },
       };
 
-      // ⚠️ Llamada DELETE al endpoint de eliminación
-      await axios.delete(`${API_URL}${documentId}`, config);
+      await API.delete(`/documents/${documentId}`, config);
 
-      // Si la eliminación fue exitosa, recargamos la lista
       fetchDocuments();
 
       alert(`Documento "${fileName}" eliminado con éxito.`);
@@ -127,8 +126,6 @@ const FilesPage = () => {
     }
   };
 
-  // NOTA: Implementaremos handleDeleteDocument y handleDownloadDocument más tarde
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("es-CO");
   };
@@ -140,9 +137,9 @@ const FilesPage = () => {
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Columna de Subida */}
+        {/* Columna de Subida: NOTA: Podrías querer ocultar esto también si user.role !== 'admin' */}
         <div className="lg:col-span-1">
-          {/* ✅ Pasar la función de refresco */}
+          {/* Aquí podrías añadir {isAdmin && <DocumentUpload ... />} */}
           <DocumentUpload onUploadSuccess={handleUploadSuccess} />
         </div>
 
@@ -153,18 +150,17 @@ const FilesPage = () => {
               Documentos Recientes
             </h2>
 
-            {/* ✅ Manejo de Estado */}
             {error && <div className="text-red-600 mb-4">{error}</div>}
             {loading ? (
               <p className="text-gray-500">Cargando documentos...</p>
             ) : documents.length === 0 ? (
               <p className="text-gray-500">No hay documentos subidos aún.</p>
             ) : (
-              // ✅ TABLA DE DOCUMENTOS
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      {/* ... (encabezados de tabla) ... */}
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nombre
                       </th>
@@ -191,7 +187,6 @@ const FilesPage = () => {
                         <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                           {doc.category}
                         </td>
-                        {/* Usamos el populate para mostrar el nombre del usuario */}
                         <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                           {doc.uploadedBy.name || "N/A"}
                         </td>
@@ -199,7 +194,7 @@ const FilesPage = () => {
                           {formatDate(doc.createdAt)}
                         </td>
                         <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                          {/* ✅ BOTÓN DE DESCARGA CONECTADO */}
+                          {/* Botón de Descarga (siempre visible para autenticados) */}
                           <button
                             onClick={() =>
                               handleDownloadDocument(doc._id, doc.fileName)
@@ -210,15 +205,18 @@ const FilesPage = () => {
                             <ArrowDownTrayIcon className="h-5 w-5" />
                           </button>
 
-                          <button
-                            onClick={() =>
-                              handleDeleteDocument(doc._id, doc.fileName)
-                            } // Pasamos el ID y el nombre para la confirmación
-                            className="text-red-500 hover:text-red-700 transition-colors"
-                            title="Eliminar"
-                          >
-                            <TrashIcon className="h-5 w-5" />
-                          </button>
+                          {/* 🛑 APLICACIÓN DE LA RECOMENDACIÓN: SOLO MOSTRAR SI ES ADMIN */}
+                          {isAdmin && (
+                            <button
+                              onClick={() =>
+                                handleDeleteDocument(doc._id, doc.fileName)
+                              } 
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              title="Eliminar"
+                            >
+                              <TrashIcon className="h-5 w-5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -1,7 +1,7 @@
 // frontend/src/pages/AuditPage.jsx (COMPLETO Y CORREGIDO)
 
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import { API } from '../api/api'; 
 import { AuthContext } from "../context/AuthContextDefinition";
 import {
   LockClosedIcon,
@@ -9,8 +9,6 @@ import {
   UserIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/solid";
-
-const API_URL = "http://localhost:5000/api/audit/logs"; // Asegúrate de usar la URL completa si no tienes proxy
 
 const AuditPage = () => {
   const { user, token } = useContext(AuthContext);
@@ -31,44 +29,44 @@ const AuditPage = () => {
 
   // 🌟 CORRECCIÓN HOOKS Y LÓGICA: Dejamos solo un useEffect sin la función auxiliar duplicada 🌟
   useEffect(() => {
-    const fetchLogs = async () => {
-      // Renombramos la interna para claridad
-      setLoading(true);
-      setError(null);
+        const fetchLogs = async () => {
+        setLoading(true);
+        setError(null);
 
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const config = {
-          headers: { Authorization: `Bearer ${token}` },
-        };
-        const response = await axios.get(API_URL, config);
-
-        // 🌟 CORRECCIÓN DEL MAP: Aseguramos que la respuesta sea un array antes de setLogs 🌟
-        if (Array.isArray(response.data)) {
-          setLogs(response.data);
-        } else {
-          console.error("La API no devolvió un array. Usando array vacío.");
-          setLogs([]);
+        if (!token) {
+            setLoading(false);
+            return;
         }
-      } catch (err) {
-        console.error("Error fetching audit logs:", err);
-        const message =
-          err.response?.status === 403
-            ? "Permisos insuficientes. Solo Administradores pueden acceder."
-            : "Error al cargar el historial. Asegúrate de que el backend esté corriendo.";
-        setError(message);
-        setLogs([]); // Aseguramos que logs sea un array vacío
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchLogs();
-  }, [token]);
+        try {
+            const config = {
+                headers: { Authorization: `Bearer ${token}` },
+            };
+            // 🌟 CAMBIO: Usamos API.get y solo la ruta relativa
+            const response = await API.get("/audit/logs", config);
+
+            // 🌟 CORRECCIÓN DEL MAP: Aseguramos que la respuesta sea un array antes de setLogs 🌟
+            if (Array.isArray(response.data)) {
+                setLogs(response.data);
+            } else {
+                console.error("La API no devolvió un array. Usando array vacío.");
+                setLogs([]);
+            }
+        } catch (err) {
+            console.error("Error fetching audit logs:", err);
+            const message =
+                err.response?.status === 403
+                ? "Permisos insuficientes. Solo Administradores pueden acceder."
+                : "Error al cargar el historial. Asegúrate de que el backend esté corriendo.";
+            setError(message);
+            setLogs([]); // Aseguramos que logs sea un array vacío
+        } finally {
+            setLoading(false);
+        }
+        };
+
+        fetchLogs();
+    }, [token]);
 
   const formatDate = (dateString) => {
     // ... (Tu función formatDate es correcta)

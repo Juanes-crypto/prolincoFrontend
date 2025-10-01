@@ -1,10 +1,9 @@
 // frontend/src/components/DocumentUpload.jsx
 
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API } from '../api/api'; 
 
-const API_URL = 'http://localhost:5000/api/documents/upload'; 
 
 // ✅ El componente ahora recibe la prop onUploadSuccess
 const DocumentUpload = ({ onUploadSuccess }) => {
@@ -60,7 +59,8 @@ const DocumentUpload = ({ onUploadSuccess }) => {
                 }
             };
             
-            const response = await axios.post(API_URL, formData, config);
+            // 🌟 CAMBIO: Usamos API.post y solo la ruta relativa
+            const response = await API.post('/documents/upload', formData, config);
 
             // Éxito
             setMessage(response.data.message || 'Archivo subido con éxito.');
