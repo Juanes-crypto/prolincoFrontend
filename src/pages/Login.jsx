@@ -1,12 +1,9 @@
 // frontend/src/pages/Login.jsx (VERSIÓN FINAL Y CORREGIDA)
 
-import React, { useState, useContext } from 'react'; // 🌟 Importar useContext 🌟
-import axios from 'axios';
+import React, { useState, useContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContextDefinition'; // 🌟 Importar AuthContext 🌟
-
-// URL base de nuestra API (Puerto 5000)
-const API_URL = 'http://localhost:5000/api/auth/'; 
+import { AuthContext } from '../context/AuthContextDefinition';
+import { API } from '../api/api'; 
 
 const Login = () => {
     // 🌟 1. USAR EL CONTEXTO Y SUS FUNCIONES 🌟
@@ -55,7 +52,8 @@ const Login = () => {
                 payload = { documentNumber, password };
             }
             
-            const { data } = await axios.post(API_URL + endpoint, payload);
+            // 🌟 MODIFICACIÓN CLAVE: USAR EL CLIENTE API IMPORTADO 🌟
+            const { data } = await API.post(`/auth/${endpoint}`, payload); // ✅ Petición con el cliente API
 
             // 🌟 3. USAR LA FUNCIÓN 'login' DEL CONTEXTO EN LUGAR DE LOCALSTORAGE 🌟
             // Esto actualiza el estado 'user' globalmente y guarda token/user en localStorage
@@ -73,8 +71,6 @@ const Login = () => {
         }
     };
 
-    // ... (handleSwitchMode y el JSX son correctos)
-    
     const handleSwitchMode = () => {
         setIsRegistering(!isRegistering);
         setError('');
