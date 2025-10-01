@@ -27,8 +27,8 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
     const { user } = useAuth();
     const isAdmin = user && user.role === 'admin';
 
-    const diagnostic = data['Diagnóstico'] || '';
-    const specificObjective = data['Objetivo Específico'] || '';
+    const diagnostic = data.diagnostic || '';
+    const specificObjective = data.specificObjective || '';
 
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '', currentUrl: '' });
     

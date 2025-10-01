@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthProvider';
 import EditableField from '../components/EditableField';
 import EditModal from '../components/EditModal';
 
-// Estructura de herramientas para la sección Admin
+// Estructura de herramientas para la sección Admin - usando nombres que deben coincidir con el backend
 const ADMIN_TOOLS_STRUCTURE = [
   { 
     name: 'Marco Legal', 
@@ -67,7 +67,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
     currentUrl: '' 
   });
 
-  // Sincronizar herramientas con datos del backend
+  // Sincronizar herramientas con datos del backend - USANDO EL ARRAY TOOLS
   useEffect(() => {
     if (data && data.tools && Array.isArray(data.tools)) {
       // Mapear herramientas del backend a nuestra estructura
@@ -106,17 +106,8 @@ const AdministracionPage = ({ data = {}, refetch }) => {
   };
 
   const handleUrlUpdate = (updatedPayload) => {
-    // Actualizar estado local
-    const updatedKey = Object.keys(updatedPayload)[0];
-    const updatedValue = Object.values(updatedPayload)[0];
-
-    setAdminTools(prevTools => 
-      prevTools.map(tool =>
-        tool.key === updatedKey ? { ...tool, url: updatedValue } : tool
-      )
-    );
-
-    // Refetch para sincronizar con el backend
+    // En este caso, el backend maneja la actualización en el array tools
+    // Solo necesitamos refetch para actualizar la UI
     if (refetch) {
       refetch();
     }
@@ -280,6 +271,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
             <li>Para configurar las URLs, haz clic en "Cambiar URL" en cada herramienta</li>
             <li>Las URLs deben ser enlaces públicos de Google Drive</li>
             <li>Asegúrate de que los documentos en Drive tengan permisos de "Cualquier persona con el enlace puede ver"</li>
+            <li>El sistema guardará automáticamente las URLs en el array de herramientas</li>
           </ul>
         </div>
       )}

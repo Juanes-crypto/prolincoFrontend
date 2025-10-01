@@ -30,21 +30,21 @@ const useOperationalData = () => {
                 },
             };
             
-            // 🛑 Llama al endpoint REAL del backend para obtener todo el contenido operativo
-            // Este endpoint debe devolver un array con todos los objetos de contenido
-            const response = await API.get('/operational/content', config);
+            // 🟡 CAMBIO: Obtener datos de cada sección por separado
+            const sections = ['admin', 'servicio', 'talento', 'organizacional'];
+            const promises = sections.map(section => 
+                API.get(`/content/${section}`, config)
+            );
             
-            // Transformar el array de respuesta en un objeto fácil de usar:
-            // { 'Talento Humano': { 'Diagnóstico': 'texto...', 'Organigrama': 'url...' } }
-            const transformedData = response.data.reduce((acc, item) => {
-                // Inicializar la sección si aún no existe
-                if (!acc[item.section]) {
-                    acc[item.section] = {};
-                }
-                // Almacenar el contenido bajo su subsección
-                acc[item.section][item.subsection] = item.content;
-                return acc;
-            }, {});
+            // Esperar todas las peticiones
+            const responses = await Promise.all(promises);
+            
+            // Transformar las respuestas en la estructura esperada
+            const transformedData = {};
+            responses.forEach((response, index) => {
+                const section = sections[index];
+                transformedData[section] = response.data;
+            });
 
             setData(transformedData);
         } catch (err) {

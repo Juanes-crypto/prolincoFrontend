@@ -8,7 +8,8 @@ import {
     HomeIcon, 
     DocumentTextIcon, 
     ClockIcon, 
-    ArrowLeftOnRectangleIcon 
+    ArrowLeftOnRectangleIcon,
+    ChartBarIcon
 } from '@heroicons/react/24/solid'; 
 
 // 🌟 Importar el contexto 🌟
@@ -18,6 +19,7 @@ import { AuthContext } from '../context/AuthContextDefinition';
 const navItems = [
     // La ruta del Dashboard (/) necesita la propiedad 'end' para coincidencia exacta
     { name: 'Dashboard', path: '/', icon: HomeIcon, role: ['admin', 'talento', 'servicio', 'basico', 'invitado',] },
+    { name: 'Plataforma Estratégica', path: '/plataforma', icon: ChartBarIcon, role: ['admin', 'talento', 'servicio'] },
     
     // Módulos
     { name: 'Servicio al Cliente', path: '/servicio', icon: TruckIcon, role: ['admin', 'servicio'] },

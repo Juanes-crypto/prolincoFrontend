@@ -57,9 +57,8 @@ const ClientePage = ({ data = {}, refetch }) => {
 
   const isAdmin = user && user.role === "admin"; // isServiceUser ya no es necesario si asumimos que cualquier usuario puede ver el contenido // Extraer datos de texto
 
-  const diagnostic = data["Diagnóstico"] || "";
-
-  const specificObjective = data["Objetivo Específico"] || ""; // Estructura de herramientas (Keys deben coincidir con las del backend)
+  const diagnostic = data.diagnostic || "";
+  const specificObjective = data.specificObjective || "";
 
   // ✅ ESTADO INICIAL CORRECTO
   const [serviceTools, setServiceTools] = useState({

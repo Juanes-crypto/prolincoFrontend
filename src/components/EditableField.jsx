@@ -1,7 +1,7 @@
 // frontend/src/components/EditableField.jsx
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext'; // Importar el hook de autenticación
+import { useAuth } from '../context/AuthProvider'; // Importar el hook de autenticación
 import { API } from '../api/api'; // Cliente API
 import { PencilSquareIcon, CheckIcon } from '@heroicons/react/24/solid';
 

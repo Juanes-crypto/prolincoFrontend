@@ -1,20 +1,19 @@
 // frontend/src/pages/OperationalToolsPage.jsx
 
 import React, { useState } from 'react';
-import useOperationalData from '../hooks/useOperationalData'; // ✅ El hook de datos reales
-import ClientePage from './ClientePage'; // 🛑 Próximo archivo a crear
-import TalentoHumanoPage from './TalentoHumanoPage'; // 🛑 Próximo archivo a crear
-import AdministracionPage from './AdministracionPage'; // 🛑 Próximo archivo a crear
+import useOperationalData from '../hooks/useOperationalData';
+import ClientePage from './ClientePage';
+import TalentoHumanoPage from './TalentoHumanoPage';
+import AdministracionPage from './AdministracionPage';
 
-// Definición de las secciones para la navegación
+// Definición de las secciones para la navegación - ACTUALIZADO
 const sections = [
-    { key: 'Cliente', name: '1. Servicio al Cliente' },
-    { key: 'Talento Humano', name: '2. Talento Humano' },
-    { key: 'Admin', name: '3. Administración' },
+    { key: 'servicio', name: '1. Servicio al Cliente' },
+    { key: 'talento', name: '2. Talento Humano' },
+    { key: 'admin', name: '3. Administración' },
 ];
 
 const OperationalToolsPage = () => {
-    // Estado para la navegación lateral
     const [activeSection, setActiveSection] = useState(sections[0].key);
     
     // Carga REAL de datos con el hook
@@ -34,12 +33,11 @@ const OperationalToolsPage = () => {
         const sectionData = data[activeSection] || {};
 
         switch (activeSection) {
-            case 'Cliente':
-                // Nota: ClientePage aún no usa todos los datos, pero ya los tiene disponibles
+            case 'servicio':
                 return <ClientePage data={sectionData} refetch={refetch} />;
-            case 'Talento Humano':
+            case 'talento':
                 return <TalentoHumanoPage data={sectionData} refetch={refetch} />;
-            case 'Admin':
+            case 'admin':
                 return <AdministracionPage data={sectionData} refetch={refetch} />;
             default:
                 return <p className="p-6 text-gray-500">Seleccione una sección.</p>;

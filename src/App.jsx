@@ -1,4 +1,4 @@
-// frontend/src/App.jsx (COMPLETO Y CORREGIDO)
+// frontend/src/App.jsx (VERSIÓN ACTUALIZADA)
 
 import React from 'react';
 import {
@@ -15,12 +15,16 @@ import UserManagement from "./pages/UserManagement";
 import FilesPage from './pages/FilesPage';
 import AuditPage from './pages/AuditPage'; 
 
-// 🌟 Nuevas Páginas de Módulos (Debes crear estos archivos si no existen)
-import ServicePage from './pages/Service'; // Asumo que existe
-import TalentPage from './pages/Talent';   // Asumo que existe
+// 🌟 PÁGINAS DE LA PLATAFORMA ESTRATÉGICA
+import OperationalToolsPage from './pages/OperationalToolsPage';
+import ClientePage from './pages/ClientePage';
+import TalentoHumanoPage from './pages/TalentoHumanoPage';
+import AdministracionPage from './pages/AdministracionPage';
 
+// 🌟 COMPONENTES
 import Sidebar from "./components/Sidebar"; 
 import AuthGuard from "./components/AuthGuard";
+import WhatsAppFloat from "./components/WhatsAppFloat"; // 🌟 NUEVO
 
 const MainLayout = () => {
     return (
@@ -32,7 +36,6 @@ const MainLayout = () => {
         </div>
     );
 };
-
 
 function App() {
     return (
@@ -53,21 +56,26 @@ function App() {
                     {/* Dashboard es la página de inicio */}
                     <Route index element={<Dashboard />} /> 
                     
-                    {/* 🌟 CORRECCIÓN CLAVE: Agregar las rutas faltantes 🌟 */}
-                    <Route path="servicio" element={<ServicePage />} />      {/* <--- ¡NUEVO! */}
-                    <Route path="talento-humano" element={<TalentPage />} /> {/* <--- ¡NUEVO! */}
+                    {/* 🌟 PLATAFORMA ESTRATÉGICA */}
+                    <Route path="plataforma" element={<OperationalToolsPage />} />
+                    
+                    {/* 🌟 RUTAS INDIVIDUALES (alternativas) */}
+                    <Route path="servicio" element={<ClientePage />} />
+                    <Route path="talento-humano" element={<TalentoHumanoPage />} />
+                    <Route path="administracion" element={<AdministracionPage />} />
                     
                     {/* Rutas de Administración */}
                     <Route path="usuarios" element={<UserManagement />} />
                     <Route path="archivos" element={<FilesPage />} /> 
                     <Route path="auditoria" element={<AuditPage />} />
-                    
-                    {/* Si un admin tiene el rol bien configurado, el AuthGuard se encarga del acceso denegado. */}
                 </Route>
                 
                 {/* Redirección 404 */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            
+            {/* 🌟 WHATSAPP FLOTANTE EN TODA LA APLICACIÓN */}
+            <WhatsAppFloat />
         </Router>
     );
 }
