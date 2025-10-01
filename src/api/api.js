@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 
+// Usamos la variable inyectada por Vite
 const API_BASE_URL = import.meta.env.VITE_API_URL; 
 
 const API = axios.create({
