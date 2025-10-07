@@ -1,5 +1,6 @@
-// frontend/src/pages/AdministracionPage.jsx
-import React, { useState, useEffect } from 'react';
+// frontend/src/pages/AdministracionPage.jsx (VERSIÓN ARQUITECTÓNICA PREMIUM)
+
+import React, { useState, useEffect, useCallback } from 'react';
 import Card from '../components/Card';
 import { 
   BuildingLibraryIcon, 
@@ -7,45 +8,90 @@ import {
   ChartBarIcon, 
   DocumentTextIcon, 
   PencilIcon,
-  ExclamationTriangleIcon 
+  ExclamationTriangleIcon,
+  ArrowTopRightOnSquareIcon,
+  CheckCircleIcon,
+  BuildingOfficeIcon,
+  ScaleIcon,
+  CubeIcon,
+  ChartPieIcon,
+  ViewfinderCircleIcon ,
+  LightBulbIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
 import EditableField from '../components/EditableField';
-import ToolUrlModal from '../components/ToolUrlModal'; // ✅ NUEVO IMPORT
+import ToolUrlModal from '../components/ToolUrlModal';
 
-// Estructura de herramientas para la sección Admin
+// 🆕 ESTRUCTURA MEJORADA CON DESCRIPCIONES Y CATEGORÍAS
 const ADMIN_TOOLS_STRUCTURE = [
   { 
     name: 'Marco Legal', 
     key: 'Marco Legal', 
-    icon: DocumentTextIcon,
-    type: 'drive'
+    icon: ScaleIcon,
+    description: 'Documentación legal y normativa de la organización',
+    category: 'Legal',
+    color: 'from-gray-600 to-gray-700',
+    importance: 'high'
   },
   { 
     name: 'Matriz DOFA', 
     key: 'Matriz DOFA', 
-    icon: ChartBarIcon,
-    type: 'drive' 
+    icon: CubeIcon,
+    description: 'Análisis de Debilidades, Oportunidades, Fortalezas y Amenazas',
+    category: 'Estratégica',
+    color: 'from-blue-500 to-cyan-500',
+    importance: 'critical'
   },
   { 
     name: 'Matriz PESTEL', 
     key: 'Matriz PESTEL', 
-    icon: ChartBarIcon,
-    type: 'drive' 
+    icon: ChartPieIcon,
+    description: 'Análisis de factores Políticos, Económicos, Sociales, Tecnológicos, Ecológicos y Legales',
+    category: 'Estratégica',
+    color: 'from-green-500 to-emerald-500',
+    importance: 'high'
   },
   { 
     name: 'Matriz EFI', 
     key: 'Matriz EFI', 
-    icon: ChartBarIcon,
-    type: 'drive' 
+    icon: ViewfinderCircleIcon ,
+    description: 'Matriz de Evaluación de Factores Internos',
+    category: 'Estratégica',
+    color: 'from-purple-500 to-indigo-500',
+    importance: 'medium'
   },
   { 
     name: 'Matriz EFE', 
     key: 'Matriz EFE', 
-    icon: ChartBarIcon,
-    type: 'drive' 
+    icon: LightBulbIcon,
+    description: 'Matriz de Evaluación de Factores Externos',
+    category: 'Estratégica',
+    color: 'from-orange-500 to-amber-500',
+    importance: 'medium'
   }
 ];
+
+// 🆕 CONFIGURACIÓN DE CATEGORÍAS
+const CATEGORIES_CONFIG = {
+  'Legal': {
+    icon: ScaleIcon,
+    color: 'border-gray-200 bg-gray-50',
+    accent: 'text-gray-700'
+  },
+  'Estratégica': {
+    icon: ChartBarIcon,
+    color: 'border-blue-200 bg-blue-50',
+    accent: 'text-blue-700'
+  }
+};
+
+// 🆕 CONFIGURACIÓN DE IMPORTANCIA
+const IMPORTANCE_CONFIG = {
+  'critical': { label: 'Crítica', color: 'from-red-500 to-pink-500', badge: 'bg-red-100 text-red-700' },
+  'high': { label: 'Alta', color: 'from-orange-500 to-amber-500', badge: 'bg-orange-100 text-orange-700' },
+  'medium': { label: 'Media', color: 'from-blue-500 to-cyan-500', badge: 'bg-blue-100 text-blue-700' }
+};
 
 const AdministracionPage = ({ data = {}, refetch }) => {
   const { user } = useAuth();
@@ -60,78 +106,189 @@ const AdministracionPage = ({ data = {}, refetch }) => {
 
   // Estado para herramientas y edición
   const [adminTools, setAdminTools] = useState([]);
-  const [editingTool, setEditingTool] = useState(null); // ✅ NUEVO ESTADO PARA TOOL MODAL
+  const [editingTool, setEditingTool] = useState(null);
+
+  // 🆕 AGRUPAR HERRAMIENTAS POR CATEGORÍA
+  const toolsByCategory = adminTools.reduce((acc, tool) => {
+    const category = tool.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(tool);
+    return acc;
+  }, {});
 
   // Sincronizar herramientas con datos del backend
   useEffect(() => {
-    if (data && data.tools && Array.isArray(data.tools)) {
-      const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => {
-        const backendTool = data.tools.find(t => t.name === tool.name);
-        return {
-          ...tool,
-          url: backendTool?.url || '#',
-          _id: backendTool?._id
-        };
-      });
+    if (data && Object.keys(data).length > 0) {
+      const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => ({
+        ...tool,
+        url: data[tool.key] || '#',
+        isConfigured: data[tool.key] && data[tool.key] !== '#'
+      }));
       setAdminTools(mappedTools);
     } else {
-      setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({ ...tool, url: '#' })));
+      setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({ 
+        ...tool, 
+        url: '#', 
+        isConfigured: false 
+      })));
     }
   }, [data]);
 
-  // Función para abrir enlaces de Drive
-  const abrirDrive = (url) => {
-    if (url && url !== '#' && url !== '') {
+  // 🆕 FUNCIÓN MEJORADA PARA ABRIR DOCUMENTOS
+  const openDocument = useCallback((url, toolName) => {
+    if (url && url !== '#') {
       window.open(url, '_blank', 'noopener,noreferrer');
     } else {
-      alert('URL no configurada. Contacta al administrador.');
+      alert(`${toolName} no está configurado. ${isAdmin ? 'Puedes configurarlo haciendo clic en "Configurar URL".' : 'Contacta al administrador.'}`);
     }
-  };
+  }, [isAdmin]);
 
-  // ✅ NUEVA FUNCIÓN para editar herramientas
-  const startToolUrlEdit = (tool) => {
+  const startToolUrlEdit = useCallback((tool) => {
     setEditingTool(tool);
-  };
+  }, []);
 
-  // ✅ NUEVA FUNCIÓN para manejar actualización exitosa
-  const handleToolUrlUpdate = () => {
+  const handleToolUrlUpdate = useCallback(() => {
     if (refetch) {
       refetch();
     }
     setEditingTool(null);
-  };
+  }, [refetch]);
 
-  // Componente para botones de herramientas
-  const renderToolButton = (tool) => (
-    <div className="flex flex-col space-y-2">
-      <button
-        onClick={() => abrirDrive(tool.url)}
-        disabled={!tool.url || tool.url === '#'}
-        className={`w-full inline-flex items-center justify-center px-4 py-2 font-semibold rounded-lg transition duration-300 ${
-          tool.url && tool.url !== '#'
-            ? 'bg-prolinco-secondary text-white hover:bg-prolinco-primary'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-        }`}
+  // 🆕 RENDERIZADO MEJORADO DE HERRAMIENTA
+  const renderToolCard = useCallback((tool) => {
+    const importanceConfig = IMPORTANCE_CONFIG[tool.importance];
+    const CategoryIcon = CATEGORIES_CONFIG[tool.category]?.icon || DocumentTextIcon;
+    
+    return (
+      <Card
+        key={tool.key}
+        title={tool.name}
+        icon={tool.icon}
+        padding="p-5"
+        className="group relative overflow-hidden h-full flex flex-col"
       >
-        <LinkIcon className="h-5 w-5 mr-2" />
-        {tool.url && tool.url !== '#' ? 'Abrir Documento' : 'URL no configurada'}
-      </button>
+        {/* 🆕 BACKGROUND GRADIENT SUTIL */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
+        
+        <div className="flex-1 flex flex-col">
+          {/* 🆕 CATEGORÍA Y DESCRIPCIÓN */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <CategoryIcon className="h-4 w-4 text-gray-400" />
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {tool.category}
+                </span>
+              </div>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full ${importanceConfig.badge}`}>
+                {importanceConfig.label}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {tool.description}
+            </p>
+          </div>
 
-      {isAdmin && (
-        <button
-          onClick={() => startToolUrlEdit(tool)}
-          className="w-full inline-flex items-center justify-center px-4 py-1 text-sm text-prolinco-primary hover:text-prolinco-secondary font-semibold transition duration-200"
-        >
-          <PencilIcon className="h-4 w-4 mr-1" />
-          Cambiar URL
-        </button>
-      )}
-    </div>
-  );
+          {/* 🆕 ESTADO DE CONFIGURACIÓN */}
+          <div className="mb-4">
+            <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
+              tool.isConfigured 
+                ? 'bg-green-100 text-green-700 border border-green-200' 
+                : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+            }`}>
+              {tool.isConfigured ? (
+                <>
+                  <CheckCircleIcon className="h-3 w-3" />
+                  <span>Configurado</span>
+                </>
+              ) : (
+                <>
+                  <ExclamationTriangleIcon className="h-3 w-3" />
+                  <span>Por Configurar</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 🆕 BOTONES MEJORADOS */}
+          <div className="mt-auto space-y-3">
+            <button
+              onClick={() => openDocument(tool.url, tool.name)}
+              className={`w-full inline-flex items-center justify-between p-3 rounded-xl transition-all duration-300 border ${
+                tool.isConfigured
+                  ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-lg hover:scale-[1.02]'
+                  : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <LinkIcon className="h-4 w-4" />
+                <span className="font-semibold text-sm">
+                  {tool.isConfigured ? 'Abrir Documento' : 'No Configurado'}
+                </span>
+              </div>
+              {tool.isConfigured && (
+                <ArrowTopRightOnSquareIcon className="h-4 w-4 opacity-80" />
+              )}
+            </button>
+            
+            {isAdmin && (
+              <button
+                onClick={() => startToolUrlEdit(tool)}
+                className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group"
+              >
+                <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" /> 
+                {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}
+              </button>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  }, [isAdmin, openDocument, startToolUrlEdit]);
+
+  // 🆕 COMPONENTE DE CATEGORÍA
+  const CategorySection = ({ category, tools }) => {
+    const categoryConfig = CATEGORIES_CONFIG[category];
+    const CategoryIcon = categoryConfig?.icon || DocumentTextIcon;
+    
+    return (
+      <section key={category} className="mb-10">
+        {/* 🆕 HEADER DE CATEGORÍA */}
+        <div className={`rounded-2xl border-2 ${categoryConfig.color} p-6 mb-6`}>
+          <div className="flex items-center space-x-4">
+            <div className={`p-3 rounded-xl ${categoryConfig.accent} bg-white shadow-sm`}>
+              <CategoryIcon className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-black text-gray-800">
+                {category}
+              </h3>
+              <p className="text-gray-600">
+                {tools.length} herramienta{tools.length !== 1 ? 's' : ''} {category.toLowerCase()}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className={`text-lg font-bold ${categoryConfig.accent}`}>
+                {tools.filter(t => t.isConfigured).length}/{tools.length}
+              </div>
+              <div className="text-sm text-gray-500">Configuradas</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 🆕 GRID DE HERRAMIENTAS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tools.map(renderToolCard)}
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className="animate-fadeIn relative">
-      {/* ✅ NUEVO MODAL PARA HERRAMIENTAS */}
+      {/* MODAL */}
       {editingTool && (
         <ToolUrlModal
           tool={editingTool}
@@ -141,121 +298,256 @@ const AdministracionPage = ({ data = {}, refetch }) => {
         />
       )}
 
-      {/* Diagnóstico y Objetivo Específico */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-        <EditableField
-          initialContent={diagnostic}
-          section="admin"
-          subsection="diagnostic"
-          onUpdate={refetch}
-          title="Diagnóstico Administrativo"
-        />
-        <EditableField
-          initialContent={specificObjective}
-          section="admin"
-          subsection="specificObjective"
-          onUpdate={refetch}
-          title="Objetivo Específico"
-        />
-      </div>
-
-      {/* Identidad Organizacional */}
-      <section className="mb-10">
-        <h2 className="text-2xl font-black text-prolinco-dark mb-6 border-b border-gray-300 pb-3">
-          Identidad Organizacional
-        </h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card title="Misión" icon={BuildingLibraryIcon} hoverEffect={true}>
-            <EditableField
-              initialContent={mission}
-              section="organizacional"
-              subsection="mission"
-              onUpdate={refetch}
-              textAreaRows={5}
-              showTitle={false}
-            />
-          </Card>
-          
-          <Card title="Visión" icon={BuildingLibraryIcon} hoverEffect={true}>
-            <EditableField
-              initialContent={vision}
-              section="organizacional"
-              subsection="vision"
-              onUpdate={refetch}
-              textAreaRows={5}
-              showTitle={false}
-            />
-          </Card>
-          
-          <Card title="Valores Corporativos" icon={BuildingLibraryIcon} hoverEffect={true}>
-            <EditableField
-              initialContent={corporateValues}
-              section="organizacional"
-              subsection="corporateValues"
-              onUpdate={refetch}
-              textAreaRows={5}
-              showTitle={false}
-              placeholder="Separar valores por comas: Calidad, Servicio, Innovación..."
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              💡 Separar cada valor con una coma
+      {/* 🆕 HEADER DE PÁGINA MEJORADO */}
+      <header className="mb-10">
+        <div className="flex items-center space-x-4 mb-6">
+          <div className="p-3 bg-prolinco-primary/10 rounded-xl">
+            <BuildingOfficeIcon className="h-8 w-8 text-prolinco-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-prolinco-dark">
+              Administración Estratégica
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Gestión de identidad organizacional y herramientas estratégicas
             </p>
+          </div>
+        </div>
+
+        {/* 🆕 INDICADORES DE ESTADO */}
+        <div className="flex items-center space-x-6 text-sm">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-gray-600">Sistema activo</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-gray-600">{adminTools.length} herramientas</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            <span className="text-gray-600">
+              {adminTools.filter(t => t.isConfigured).length} configuradas
+            </span>
+          </div>
+          {isAdmin && (
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-prolinco-primary rounded-full"></div>
+              <span className="text-gray-600">Modo administrador</span>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* 🆕 DIAGNÓSTICO Y OBJETIVO MEJORADO */}
+      <section className="mb-12">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-2 h-8 bg-prolinco-primary rounded-full"></div>
+              <h3 className="text-xl font-bold text-prolinco-dark">Diagnóstico Administrativo</h3>
+            </div>
+            <EditableField
+              initialContent={diagnostic}
+              section="admin"
+              subsection="diagnostic"
+              onUpdate={refetch}
+              showTitle={false}
+            />
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-2 h-8 bg-prolinco-secondary rounded-full"></div>
+              <h3 className="text-xl font-bold text-prolinco-dark">Objetivo Específico</h3>
+            </div>
+            <EditableField
+              initialContent={specificObjective}
+              section="admin"
+              subsection="specificObjective"
+              onUpdate={refetch}
+              showTitle={false}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 🆕 IDENTIDAD ORGANIZACIONAL MEJORADA */}
+      <section className="mb-12">
+        <div className="flex items-center space-x-4 mb-8">
+          <div className="w-1 h-12 bg-gradient-to-b from-prolinco-primary to-prolinco-secondary rounded-full"></div>
+          <div>
+            <h2 className="text-2xl font-black text-prolinco-dark">
+              Identidad Organizacional
+            </h2>
+            <p className="text-gray-600">
+              Fundamentos y principios que definen la esencia de Prolinco
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card 
+            title="Misión" 
+            icon={ViewfinderCircleIcon }
+            padding="p-6"
+            className="h-full"
+          >
+            <div className="flex-1">
+              <EditableField
+                initialContent={mission}
+                section="organizacional"
+                subsection="mission"
+                onUpdate={refetch}
+                textAreaRows={6}
+                showTitle={false}
+                placeholder="Define el propósito fundamental de la organización..."
+              />
+            </div>
+          </Card>
+          
+          <Card 
+            title="Visión" 
+            icon={LightBulbIcon}
+            padding="p-6"
+            className="h-full"
+          >
+            <div className="flex-1">
+              <EditableField
+                initialContent={vision}
+                section="organizacional"
+                subsection="vision"
+                onUpdate={refetch}
+                textAreaRows={6}
+                showTitle={false}
+                placeholder="Describe el futuro deseado de la organización..."
+              />
+            </div>
+          </Card>
+          
+          <Card 
+            title="Valores Corporativos" 
+            icon={ShieldCheckIcon}
+            padding="p-6"
+            className="h-full"
+          >
+            <div className="flex-1">
+              <EditableField
+                initialContent={corporateValues}
+                section="organizacional"
+                subsection="corporateValues"
+                onUpdate={refetch}
+                textAreaRows={6}
+                showTitle={false}
+                placeholder="Separar valores por comas: Calidad, Servicio, Innovación..."
+              />
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-700">
+                  💡 <strong>Formato:</strong> Separar cada valor con una coma. Ejemplo: Calidad, Servicio, Innovación, Compromiso
+                </p>
+              </div>
+            </div>
           </Card>
         </div>
       </section>
 
-      {/* Marco Legal y Matrices Estratégicas */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-black text-prolinco-dark mb-6 border-b border-gray-300 pb-3">
-          Marco Legal y Matrices Estratégicas
-        </h2>
+      {/* 🆕 MARCO LEGAL Y MATRICES ESTRATÉGICAS MEJORADO */}
+      <section>
+        <div className="flex items-center space-x-4 mb-8">
+          <div className="w-1 h-12 bg-gradient-to-b from-prolinco-primary to-prolinco-secondary rounded-full"></div>
+          <div>
+            <h2 className="text-2xl font-black text-prolinco-dark">
+              Marco Legal y Matrices Estratégicas
+            </h2>
+            <p className="text-gray-600">
+              Documentación legal y herramientas de análisis estratégico
+            </p>
+          </div>
+        </div>
 
-        {!isAdmin && adminTools.every(tool => !tool.url || tool.url === '#') && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-2" />
-              <p className="text-yellow-700">
-                Las herramientas aún no han sido configuradas por el administrador.
-              </p>
+        {/* 🆕 PROGRESS BAR GLOBAL */}
+        <div className="mb-10">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-prolinco-dark">
+                Progreso de Configuración Estratégica
+              </h3>
+              <span className="text-sm font-medium text-prolinco-primary">
+                {adminTools.filter(t => t.isConfigured).length}/{adminTools.length}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-prolinco-primary to-prolinco-secondary h-3 rounded-full transition-all duration-1000"
+                style={{ 
+                  width: `${(adminTools.filter(t => t.isConfigured).length / adminTools.length) * 100}%` 
+                }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-2">
+              <span>Por configurar</span>
+              <span>Completado</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 🆕 ALERTA PARA NO ADMINISTRADORES */}
+        {!isAdmin && adminTools.every(tool => !tool.isConfigured) && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mb-8">
+            <div className="flex items-center space-x-3">
+              <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600 flex-shrink-0" />
+              <div>
+                <h4 className="text-lg font-semibold text-yellow-800 mb-1">
+                  Herramientas en Configuración
+                </h4>
+                <p className="text-yellow-700">
+                  Las herramientas estratégicas están siendo configuradas por el administrador. 
+                  Estarán disponibles próximamente.
+                </p>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {adminTools.map((tool) => (
-            <Card 
-              key={tool.key} 
-              title={tool.name} 
-              icon={tool.icon}
-              hoverEffect={true}
-              className={!tool.url || tool.url === '#' ? 'opacity-75' : ''}
-            >
-              {(!tool.url || tool.url === '#') && (
-                <p className="text-xs text-red-500 mb-2 text-center">
-                  ⚠️ URL no configurada
-                </p>
-              )}
-              {renderToolButton(tool)}
-            </Card>
-          ))}
-        </div>
-      </section>
+        {/* 🆕 RENDERIZADO POR CATEGORÍAS */}
+        {Object.keys(toolsByCategory).map(category => (
+          <CategorySection 
+            key={category}
+            category={category}
+            tools={toolsByCategory[category]}
+          />
+        ))}
 
-      {/* Información para Administradores */}
-      {isAdmin && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-8">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">
-            💡 Información para Administradores
-          </h3>
-          <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
-            <li>Para configurar las URLs, haz clic en "Cambiar URL" en cada herramienta</li>
-            <li>Las URLs deben ser enlaces públicos de Google Drive</li>
-            <li>Asegúrate de que los documentos en Drive tengan permisos de "Cualquier persona con el enlace puede ver"</li>
-            <li>El sistema guardará automáticamente las URLs en el array de herramientas</li>
-          </ul>
-        </div>
-      )}
+        {/* 🆕 PANEL DE ADMINISTRADOR MEJORADO */}
+        {isAdmin && (
+          <div className="bg-gradient-to-r from-prolinco-primary/10 to-prolinco-secondary/10 border border-prolinco-primary/20 rounded-2xl p-6 mt-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <ShieldCheckIcon className="h-6 w-6 text-prolinco-primary" />
+              <h3 className="text-lg font-semibold text-prolinco-dark">
+                Panel de Administrador
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-prolinco-dark">Configuración de URLs</h4>
+                <ul className="text-gray-700 space-y-1">
+                  <li>• Haz clic en "Configurar URL" en cada herramienta</li>
+                  <li>• Usa enlaces públicos de Google Drive</li>
+                  <li>• Verifica permisos de visualización pública</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-semibold text-prolinco-dark">Prioridades</h4>
+                <ul className="text-gray-700 space-y-1">
+                  <li>• <span className="text-red-600 font-medium">Críticas:</span> Configurar inmediatamente</li>
+                  <li>• <span className="text-orange-600 font-medium">Altas:</span> Configurar esta semana</li>
+                  <li>• <span className="text-blue-600 font-medium">Medias:</span> Configurar cuando sea posible</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 };

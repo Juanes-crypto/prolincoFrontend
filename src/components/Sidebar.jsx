@@ -1,7 +1,7 @@
-// frontend/src/components/Sidebar.jsx (COMPLETO Y CORREGIDO)
+// frontend/src/components/Sidebar.jsx (VERSIÓN PREMIUM ARQUITECTÓNICA)
 
-import React, { useContext } from 'react'; // 🌟 Importar useContext
-import { NavLink } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
     TruckIcon, 
     UsersIcon, 
@@ -9,94 +9,262 @@ import {
     DocumentTextIcon, 
     ClockIcon, 
     ArrowLeftOnRectangleIcon,
-    ChartBarIcon
+    ChartBarIcon,
+    CubeIcon,
+    BuildingStorefrontIcon,
+    UserGroupIcon,
+    FolderIcon,
+    ShieldCheckIcon,
+    ChartPieIcon
 } from '@heroicons/react/24/solid'; 
 
 // 🌟 Importar el contexto 🌟
 import { AuthContext } from '../context/AuthContextDefinition'; 
 
-// Definición de ítems de navegación con roles permitidos
+// 🆕 DEFINICIÓN DE NAVEGACIÓN MEJORADA CON ICONOS ESPECÍFICOS
 const navItems = [
-    // La ruta del Dashboard (/) necesita la propiedad 'end' para coincidencia exacta
-    { name: 'Dashboard', path: '/', icon: HomeIcon, role: ['admin', 'talento', 'servicio', 'basico', 'invitado',] },
-    { name: 'Plataforma Estratégica', path: '/plataforma', icon: ChartBarIcon, role: ['admin', 'talento', 'servicio'] },
-    
-    // Módulos
-    // 🆕 CAMBIO: Eliminamos 'Servicio al Cliente' del menú lateral para evitar duplicación
-    { name: 'Talento Humano', path: '/talento-humano', icon: UsersIcon, role: ['admin', 'servicio', 'basico', 'talento'] },
-    { name: 'Gestión de Archivos', path: '/archivos', icon: DocumentTextIcon, role: ['admin', 'talento', 'servicio'] },
-    
-    // 🆕 CAMBIO: Agregamos 'Administración' como opción independiente en el menú lateral
-    { name: 'Administración', path: '/administracion', icon: ChartBarIcon, role: ['admin'] },
-    
-    // Administración y Auditoría (Solo para Admin)
-    { name: 'Gestión de Usuarios', path: '/usuarios', icon: UsersIcon, role: ['admin'] },
-    { name: 'Auditoría / Historial', path: '/auditoria', icon: ClockIcon, role: ['admin'] },
+    { 
+        name: 'Dashboard', 
+        path: '/', 
+        icon: HomeIcon, 
+        role: ['admin', 'talento', 'servicio', 'basico', 'invitado'],
+        description: 'Panel principal'
+    },
+    { 
+        name: 'Plataforma Estratégica', 
+        path: '/plataforma', 
+        icon: ChartPieIcon, 
+        role: ['admin', 'talento', 'servicio'],
+        description: 'Herramientas centrales'
+    },
+    { 
+        name: 'Talento Humano', 
+        path: '/talento-humano', 
+        icon: UserGroupIcon, 
+        role: ['admin', 'servicio', 'basico', 'talento'],
+        description: 'Gestión de personal'
+    },
+    { 
+        name: 'Gestión de Archivos', 
+        path: '/archivos', 
+        icon: FolderIcon, 
+        role: ['admin', 'talento', 'servicio'],
+        description: 'Documentos y recursos'
+    },
+    { 
+        name: 'Administración', 
+        path: '/administracion', 
+        icon: BuildingStorefrontIcon, 
+        role: ['admin'],
+        description: 'Configuración estratégica'
+    },
+    { 
+        name: 'Gestión de Usuarios', 
+        path: '/usuarios', 
+        icon: ShieldCheckIcon, 
+        role: ['admin'],
+        description: 'Control de acceso'
+    },
+    { 
+        name: 'Auditoría / Historial', 
+        path: '/auditoria', 
+        icon: ClockIcon, 
+        role: ['admin'],
+        description: 'Registros del sistema'
+    },
 ];
 
 const Sidebar = () => {
-    // 🌟 CAMBIO CLAVE: Obtener el usuario y la función logout del contexto 🌟
     const { user, logout } = useContext(AuthContext); 
-    
-    // Obtenemos el rol del estado global. Si no hay usuario, es 'invitado'.
+    const location = useLocation();
     const userRole = user?.role || 'invitado';
 
     const handleLogout = () => {
-        // Usamos la función de logout del contexto (limpia localStorage y estado)
-        logout(); 
-        // El router se encargará de redirigir al /login después de la actualización del estado.
+        logout();
     };
-    
-    // Función para renderizar el enlace de navegación con un diseño atractivo
-    const NavItem = ({ item }) => (
-        <NavLink
-            to={item.path}
-            // 🌟 CORRECCIÓN DE RUTA: Aplicar 'end: true' solo a la ruta raíz '/' 🌟
-            {...(item.path === '/' ? { end: true } : {})}
-            
-            // Clases de Tailwind para un diseño interactivo y vibrante
-            className={({ isActive }) => 
-                `flex items-center p-3 rounded-xl transition duration-200 group 
-                ${isActive 
-                    ? 'bg-prolinco-primary text-prolinco-dark font-bold shadow-lg transform translate-x-1' 
-                    : 'text-prolinco-light hover:bg-prolinco-dark/70 hover:shadow-md'
-                }`
-            }
-        >
-            <item.icon className="h-6 w-6 mr-3 transition-colors duration-200" />
-            <span className="text-sm font-medium">{item.name}</span>
-        </NavLink>
-    );
-    
-    return (
-        // Usamos una clase fija para el sidebar
-        <div className="w-64 bg-prolinco-secondary shadow-2xl p-4 flex flex-col justify-between z-10">
-            {/* Header del Sidebar */}
-            <div>
-                <div className="text-prolinco-primary text-2xl font-black mb-10 border-b-2 border-prolinco-primary/50 pb-4">
-                    LACTEOS PROLINCO
+
+    // 🆕 FUNCIÓN PARA OBTENER ITEMS FILTRADOS POR ROL
+    const filteredNavItems = navItems.filter(item => item.role.includes(userRole));
+
+    // 🆕 COMPONENTE NAVITEM MEJORADO
+    const NavItem = ({ item }) => {
+        const isActive = location.pathname === item.path || 
+                        (item.path !== '/' && location.pathname.startsWith(item.path));
+        
+        return (
+            <NavLink
+                to={item.path}
+                {...(item.path === '/' ? { end: true } : {})}
+                className={`group relative flex items-center p-4 rounded-xl transition-all duration-300 border-l-4 ${
+                    isActive 
+                        ? 'bg-white shadow-lg border-prolinco-primary text-prolinco-dark transform translate-x-2' 
+                        : 'border-transparent text-gray-600 hover:bg-white/80 hover:shadow-md hover:border-prolinco-secondary/50 hover:text-prolinco-dark'
+                }`}
+            >
+                {/* 🆕 INDICADOR ACTIVO */}
+                {isActive && (
+                    <div className="absolute -left-1 top-1/2 transform -translate-y-1/2">
+                        <div className="w-2 h-8 bg-prolinco-primary rounded-full"></div>
+                    </div>
+                )}
+                
+                {/* 🆕 ICONO CON ESTADOS MEJORADOS */}
+                <div className={`flex-shrink-0 p-2 rounded-lg transition-all duration-300 ${
+                    isActive 
+                        ? 'bg-prolinco-primary/10 text-prolinco-primary' 
+                        : 'bg-gray-100 text-gray-500 group-hover:bg-prolinco-secondary/10 group-hover:text-prolinco-secondary'
+                }`}>
+                    <item.icon className="h-5 w-5" />
                 </div>
                 
-                {/* Ítems de Navegación */}
-                <nav className="space-y-3">
-                    {navItems
-                        // Filtramos para mostrar solo los enlaces que correspondan al rol del usuario
-                        .filter(item => item.role.includes(userRole))
-                        .map((item) => (
-                            <NavItem key={item.name} item={item} />
-                        ))}
+                {/* 🆕 TEXTO CON DESCRIPCIÓN */}
+                <div className="ml-3 flex-1 min-w-0">
+                    <span className={`text-sm font-semibold block transition-colors duration-300 ${
+                        isActive ? 'text-prolinco-dark' : 'text-gray-700 group-hover:text-prolinco-dark'
+                    }`}>
+                        {item.name}
+                    </span>
+                    <span className={`text-xs transition-colors duration-300 ${
+                        isActive ? 'text-prolinco-primary' : 'text-gray-400 group-hover:text-prolinco-secondary'
+                    }`}>
+                        {item.description}
+                    </span>
+                </div>
+                
+                {/* 🆕 INDICADOR DE HOVER */}
+                <div className={`opacity-0 transform translate-x-1 transition-all duration-300 ${
+                    !isActive && 'group-hover:opacity-100 group-hover:translate-x-0'
+                }`}>
+                    <div className="w-1 h-1 bg-prolinco-primary rounded-full"></div>
+                </div>
+            </NavLink>
+        );
+    };
+
+    return (
+        // 🆕 DISEÑO ARQUITECTÓNICO COHERENTE CON DASHBOARD
+        <div className="w-80 bg-white border-r border-gray-200 shadow-sm flex flex-col h-full z-10">
+            
+            {/* 🆕 HEADER PREMIUM */}
+            <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center space-x-3 mb-2">
+                    <div className="h-12 w-12 bg-prolinco-primary rounded-xl flex items-center justify-center shadow-lg">
+                        <CubeIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-black text-prolinco-dark leading-tight">
+                            PROLINCO
+                        </h1>
+                        <p className="text-xs text-gray-500 font-medium">
+                            Plataforma Estratégica
+                        </p>
+                    </div>
+                </div>
+                
+                {/* 🆕 INFO USUARIO */}
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-semibold text-prolinco-dark capitalize">
+                                {userRole}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                                {user?.documentNumber || 'Usuario'}
+                            </p>
+                        </div>
+                        <div className="h-8 w-8 bg-prolinco-secondary rounded-full flex items-center justify-center">
+                            <UsersIcon className="h-4 w-4 text-white" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 🆕 NAVEGACIÓN PRINCIPAL */}
+            <div className="flex-1 overflow-y-auto py-6">
+                <nav className="space-y-2 px-4">
+                    {/* 🆕 SECCIÓN PRINCIPAL */}
+                    <div className="mb-6">
+                        <div className="flex items-center space-x-2 mb-4 px-2">
+                            <div className="h-1 w-4 bg-prolinco-primary rounded-full"></div>
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Navegación Principal
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            {filteredNavItems
+                                .filter(item => ['/', '/plataforma'].includes(item.path))
+                                .map((item) => (
+                                    <NavItem key={item.name} item={item} />
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 🆕 SECCIÓN MÓDULOS */}
+                    <div className="mb-6">
+                        <div className="flex items-center space-x-2 mb-4 px-2">
+                            <div className="h-1 w-4 bg-prolinco-secondary rounded-full"></div>
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Módulos
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            {filteredNavItems
+                                .filter(item => ['/talento-humano', '/archivos', '/administracion'].includes(item.path))
+                                .map((item) => (
+                                    <NavItem key={item.name} item={item} />
+                                ))}
+                        </div>
+                    </div>
+
+                    {/* 🆕 SECCIÓN ADMINISTRACIÓN */}
+                    {userRole === 'admin' && (
+                        <div>
+                            <div className="flex items-center space-x-2 mb-4 px-2">
+                                <div className="h-1 w-4 bg-green-500 rounded-full"></div>
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Administración
+                                </span>
+                            </div>
+                            <div className="space-y-2">
+                                {filteredNavItems
+                                    .filter(item => ['/usuarios', '/auditoria'].includes(item.path))
+                                    .map((item) => (
+                                        <NavItem key={item.name} item={item} />
+                                    ))}
+                            </div>
+                        </div>
+                    )}
                 </nav>
             </div>
-            
-            {/* Pie de página con botón de Logout */}
-            <div className="pt-6 border-t border-prolinco-dark/50">
+
+            {/* 🆕 FOOTER MEJORADO */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
                 <button 
                     onClick={handleLogout}
-                    className="w-full flex items-center p-3 rounded-xl transition duration-200 text-red-400 hover:bg-red-900/50"
+                    className="w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 bg-white border border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600 group"
                 >
-                    <ArrowLeftOnRectangleIcon className="h-6 w-6 mr-3" />
-                    <span className="text-sm font-medium">Cerrar Sesión</span>
+                    <div className="flex items-center">
+                        <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-500 transition-colors duration-300">
+                            <ArrowLeftOnRectangleIcon className="h-4 w-4 text-red-500 group-hover:text-white transition-colors duration-300" />
+                        </div>
+                        <div className="ml-3 text-left">
+                            <span className="text-sm font-semibold block">Cerrar Sesión</span>
+                            <span className="text-xs text-gray-500 group-hover:text-red-400">
+                                Salir del sistema
+                            </span>
+                        </div>
+                    </div>
+                    <div className="text-red-400 group-hover:text-red-600">
+                        <ArrowLeftOnRectangleIcon className="h-4 w-4" />
+                    </div>
                 </button>
+                
+                {/* 🆕 VERSIÓN DEL SISTEMA */}
+                <div className="mt-3 text-center">
+                    <span className="text-xs text-gray-400">
+                        v2.0 • {new Date().getFullYear()}
+                    </span>
+                </div>
             </div>
         </div>
     );
