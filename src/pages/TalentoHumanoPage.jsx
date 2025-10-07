@@ -1,13 +1,12 @@
-// frontend/src/pages/Talent.jsx (VERSIÓN REFACTORIZADA)
-
+// frontend/src/pages/TalentoHumanoPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import Card from '../components/Card';
 import { UsersIcon, LinkIcon, DocumentTextIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
 import EditableField from '../components/EditableField';
-import EditModal from '../components/EditModal';
+import ToolUrlModal from '../components/ToolUrlModal'; // ✅ NUEVO IMPORT
 
-// ✅ MOVER FUERA DEL COMPONENTE
+// Estructura de herramientas
 const TOOL_KEYS_STRUCTURE = [
     { name: 'Organigrama', key: 'Organigrama', icon: DocumentTextIcon },
     { name: 'Mapa de Procesos', key: 'Mapa de Procesos', icon: DocumentTextIcon },
@@ -17,7 +16,7 @@ const TOOL_KEYS_STRUCTURE = [
     { name: 'Proceso de Capacitación', key: 'Proceso de Capacitación', icon: DocumentTextIcon },
 ];
 
-// ✅ MOVER FUERA DEL COMPONENTE
+// Función auxiliar
 const mapToolsWithData = (tools, data) => tools.map(tool => ({
     ...tool,
     url: data[tool.key] || '#',
@@ -30,74 +29,62 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
     const diagnostic = data.diagnostic || '';
     const specificObjective = data.specificObjective || '';
 
-    const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '', currentUrl: '' });
+    // ✅ NUEVO ESTADO PARA TOOL MODAL
+    const [editingTool, setEditingTool] = useState(null);
     
-    // ✅ ESTADO INICIAL SIMPLIFICADO
+    // Estado para herramientas
     const [talentTools, setTalentTools] = useState([]);
 
-    // ✅ useEffect ÚNICO
+    // Sincronizar herramientas con datos
     useEffect(() => {
         if (data && Object.keys(data).length > 0) {
             setTalentTools(mapToolsWithData(TOOL_KEYS_STRUCTURE, data));
         }
     }, [data]);
 
-    // ✅ useCallback PARA FUNCIONES
-    const startUrlEdit = useCallback((toolName, toolKey, currentUrl) => {
-        setEditingUrl({ toolName, toolKey, url: currentUrl, currentUrl });
+    // ✅ NUEVA FUNCIÓN para editar herramientas
+    const startToolUrlEdit = useCallback((tool) => {
+        setEditingTool(tool);
     }, []);
 
-    const handleUrlUpdate = useCallback((updatedPayload) => {
-        const updatedKey = Object.keys(updatedPayload)[0];
-        const updatedValue = Object.values(updatedPayload)[0];
-
-        setTalentTools(prevTools => prevTools.map(tool =>
-            tool.key === updatedKey ? { ...tool, url: updatedValue } : tool
-        ));
-
+    // ✅ NUEVA FUNCIÓN para manejar actualización exitosa
+    const handleToolUrlUpdate = useCallback(() => {
         if (refetch) {
             refetch();
         }
+        setEditingTool(null);
     }, [refetch]);
 
-    const closeModal = useCallback(() => {
-        setEditingUrl({ toolName: null });
-    }, []);
-
-    // ----------------------------------------------------
-    // *** RENDER ***
-    // ----------------------------------------------------
     return (
         <div className="animate-fadeIn relative">
-            {/* Modal de Edición de URL (solo necesitamos el modal de URL) */}
-            <EditModal
-                type="url"
-                section="Talento Humano"
-                editingData={editingUrl}
-                onComplete={handleUrlUpdate}
-                onClose={closeModal}
-            />
+            {/* ✅ NUEVO MODAL PARA HERRAMIENTAS */}
+            {editingTool && (
+                <ToolUrlModal
+                    tool={editingTool}
+                    section="talento"
+                    onComplete={handleToolUrlUpdate}
+                    onClose={() => setEditingTool(null)}
+                />
+            )}
 
-            {/* Diagnóstico y Objetivo (USANDO EditableField) */}
+            {/* Diagnóstico y Objetivo */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                {/* 1. Diagnóstico */}
                 <EditableField
                     initialContent={diagnostic}
                     section="Talento Humano"
                     subsection="Diagnóstico"
-                    onUpdate={refetch} // Refresca los datos del padre después de guardar
+                    onUpdate={refetch}
                 />
 
-                {/* 2. Objetivo Específico */}
                 <EditableField
                     initialContent={specificObjective}
                     section="Talento Humano"
                     subsection="Objetivo Específico"
-                    onUpdate={refetch} // Refresca los datos del padre después de guardar
+                    onUpdate={refetch}
                 />
             </div>
 
-            {/* Sección de Herramientas (URLs EDITABLES) */}
+            {/* Sección de Herramientas */}
             <h2 className="text-2xl font-black text-prolinco-dark mb-4 border-b border-gray-300 pb-2">
                 Documentos y Herramientas Operativas (Drive)
             </h2>
@@ -105,7 +92,9 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {talentTools.map((tool) => (
                     <Card key={tool.key} title={tool.name} icon={tool.icon}>
-                        <p className="text-sm text-gray-500 mb-3 truncate">URL: {tool.url}</p>
+                        <p className="text-sm text-gray-500 mb-3 truncate">
+                            URL: {tool.url && tool.url !== '#' ? '✅ Configurada' : '❌ No configurada'}
+                        </p>
                         <>
                             <a
                                 href={tool.url}
@@ -118,7 +107,7 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
                             </a>
                             {isAdmin && (
                                 <button
-                                    onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
+                                    onClick={() => startToolUrlEdit(tool)}
                                     className="w-full inline-flex items-center justify-center px-4 py-1 text-sm text-prolinco-primary hover:text-prolinco-secondary font-semibold"
                                 >
                                     <PencilIcon className="h-4 w-4 mr-1" /> Cambiar URL

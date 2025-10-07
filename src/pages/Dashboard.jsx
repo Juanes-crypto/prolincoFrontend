@@ -34,13 +34,21 @@ const Dashboard = () => {
 
   return (
     <div className="animate-fadeIn">
+      {/* 🆕 CAMBIO: Header con imagen corporativa en lugar de texto */}
       <header className="mb-10 border-b-4 border-prolinco-primary pb-4">
-        <h1 className="text-5xl font-extrabold text-prolinco-dark flex items-center">
-          <HomeIcon className="h-10 w-10 mr-4 text-prolinco-secondary" />
-          ¡Bienvenido a Lácteos Prolinco!
-        </h1>
-        <p className="text-xl text-gray-600 mt-2">
-          Portal Estratégico de Intervención Empresarial.
+        <div className="flex justify-center mb-4">
+          {/* 
+            🖼️ Reemplaza la ruta con la imagen corporativa de Prolinco 
+            Por ahora, usamos un placeholder. Puedes poner la imagen en la carpeta public/images/
+          */}
+          <img 
+            src="/public/img/logo-prolinco.jpg" // Cambia esta ruta por la correcta
+            alt="Lácteos Prolinco - Identidad Corporativa"
+            className="h-32 w-auto"
+          />
+        </div>
+        <p className="text-xl text-gray-600 text-center">
+          Portal Estratégico de Intervención Empresarial
         </p>
       </header>
 

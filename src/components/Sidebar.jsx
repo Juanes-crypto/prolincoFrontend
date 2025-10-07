@@ -22,9 +22,12 @@ const navItems = [
     { name: 'Plataforma Estratégica', path: '/plataforma', icon: ChartBarIcon, role: ['admin', 'talento', 'servicio'] },
     
     // Módulos
-    { name: 'Servicio al Cliente', path: '/servicio', icon: TruckIcon, role: ['admin', 'servicio'] },
+    // 🆕 CAMBIO: Eliminamos 'Servicio al Cliente' del menú lateral para evitar duplicación
     { name: 'Talento Humano', path: '/talento-humano', icon: UsersIcon, role: ['admin', 'servicio', 'basico', 'talento'] },
     { name: 'Gestión de Archivos', path: '/archivos', icon: DocumentTextIcon, role: ['admin', 'talento', 'servicio'] },
+    
+    // 🆕 CAMBIO: Agregamos 'Administración' como opción independiente en el menú lateral
+    { name: 'Administración', path: '/administracion', icon: ChartBarIcon, role: ['admin'] },
     
     // Administración y Auditoría (Solo para Admin)
     { name: 'Gestión de Usuarios', path: '/usuarios', icon: UsersIcon, role: ['admin'] },

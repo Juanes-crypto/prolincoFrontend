@@ -11,37 +11,37 @@ import {
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
 import EditableField from '../components/EditableField';
-import EditModal from '../components/EditModal';
+import ToolUrlModal from '../components/ToolUrlModal'; // ✅ NUEVO IMPORT
 
-// Estructura de herramientas para la sección Admin - usando nombres que deben coincidir con el backend
+// Estructura de herramientas para la sección Admin
 const ADMIN_TOOLS_STRUCTURE = [
   { 
     name: 'Marco Legal', 
-    key: 'marcoLegal', 
+    key: 'Marco Legal', 
     icon: DocumentTextIcon,
     type: 'drive'
   },
   { 
     name: 'Matriz DOFA', 
-    key: 'matrizDOFA', 
+    key: 'Matriz DOFA', 
     icon: ChartBarIcon,
     type: 'drive' 
   },
   { 
     name: 'Matriz PESTEL', 
-    key: 'matrizPESTEL', 
+    key: 'Matriz PESTEL', 
     icon: ChartBarIcon,
     type: 'drive' 
   },
   { 
     name: 'Matriz EFI', 
-    key: 'matrizEFI', 
+    key: 'Matriz EFI', 
     icon: ChartBarIcon,
     type: 'drive' 
   },
   { 
     name: 'Matriz EFE', 
-    key: 'matrizEFE', 
+    key: 'Matriz EFE', 
     icon: ChartBarIcon,
     type: 'drive' 
   }
@@ -60,17 +60,11 @@ const AdministracionPage = ({ data = {}, refetch }) => {
 
   // Estado para herramientas y edición
   const [adminTools, setAdminTools] = useState([]);
-  const [editingUrl, setEditingUrl] = useState({ 
-    toolName: null, 
-    toolKey: null, 
-    url: '', 
-    currentUrl: '' 
-  });
+  const [editingTool, setEditingTool] = useState(null); // ✅ NUEVO ESTADO PARA TOOL MODAL
 
-  // Sincronizar herramientas con datos del backend - USANDO EL ARRAY TOOLS
+  // Sincronizar herramientas con datos del backend
   useEffect(() => {
     if (data && data.tools && Array.isArray(data.tools)) {
-      // Mapear herramientas del backend a nuestra estructura
       const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => {
         const backendTool = data.tools.find(t => t.name === tool.name);
         return {
@@ -81,7 +75,6 @@ const AdministracionPage = ({ data = {}, refetch }) => {
       });
       setAdminTools(mappedTools);
     } else {
-      // Si no hay herramientas en el backend, usar estructura por defecto
       setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({ ...tool, url: '#' })));
     }
   }, [data]);
@@ -95,26 +88,17 @@ const AdministracionPage = ({ data = {}, refetch }) => {
     }
   };
 
-  // Lógica de edición de URLs
-  const startUrlEdit = (toolName, toolKey, currentUrl) => {
-    setEditingUrl({ 
-      toolName, 
-      toolKey, 
-      url: currentUrl, 
-      currentUrl 
-    });
+  // ✅ NUEVA FUNCIÓN para editar herramientas
+  const startToolUrlEdit = (tool) => {
+    setEditingTool(tool);
   };
 
-  const handleUrlUpdate = (updatedPayload) => {
-    // En este caso, el backend maneja la actualización en el array tools
-    // Solo necesitamos refetch para actualizar la UI
+  // ✅ NUEVA FUNCIÓN para manejar actualización exitosa
+  const handleToolUrlUpdate = () => {
     if (refetch) {
       refetch();
     }
-  };
-
-  const closeModal = () => {
-    setEditingUrl({ toolName: null, toolKey: null, url: '', currentUrl: '' });
+    setEditingTool(null);
   };
 
   // Componente para botones de herramientas
@@ -135,7 +119,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
 
       {isAdmin && (
         <button
-          onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
+          onClick={() => startToolUrlEdit(tool)}
           className="w-full inline-flex items-center justify-center px-4 py-1 text-sm text-prolinco-primary hover:text-prolinco-secondary font-semibold transition duration-200"
         >
           <PencilIcon className="h-4 w-4 mr-1" />
@@ -147,18 +131,15 @@ const AdministracionPage = ({ data = {}, refetch }) => {
 
   return (
     <div className="animate-fadeIn relative">
-      {/* Modal de Edición de URL */}
-      <EditModal
-        type="url"
-        section="admin"
-        editingData={{ 
-          ...editingUrl, 
-          field: editingUrl.toolKey,
-          toolName: editingUrl.toolName 
-        }}
-        onComplete={handleUrlUpdate}
-        onClose={closeModal}
-      />
+      {/* ✅ NUEVO MODAL PARA HERRAMIENTAS */}
+      {editingTool && (
+        <ToolUrlModal
+          tool={editingTool}
+          section="admin"
+          onComplete={handleToolUrlUpdate}
+          onClose={() => setEditingTool(null)}
+        />
+      )}
 
       {/* Diagnóstico y Objetivo Específico */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">

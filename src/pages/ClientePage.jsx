@@ -1,9 +1,6 @@
-// frontend/src/pages/ClientePage.jsx (Refactorizado de Service.jsx)
-
+// frontend/src/pages/ClientePage.jsx
 import React, { useState, useEffect, useCallback } from "react";
-
 import Card from "../components/Card";
-
 import {
   TruckIcon,
   LinkIcon,
@@ -13,17 +10,13 @@ import {
   ShareIcon,
   ChartBarIcon,
   DocumentTextIcon,
+  PencilIcon,
 } from "@heroicons/react/24/solid";
-
-import { useAuth } from "../context/AuthProvider"; // ✅ Importar useAuth para el rol
-
-// ✅ NUEVOS IMPORTS
-
+import { useAuth } from "../context/AuthProvider";
 import EditableField from "../components/EditableField";
+import ToolUrlModal from "../components/ToolUrlModal"; // ✅ NUEVO IMPORT
 
-import EditModal from "../components/EditModal"; // Aún se necesita para editar URLs
-
-// ✅ MOVER FUERA DEL COMPONENTE - ESTRUCTURAS ESTÁTICAS
+// Estructura de herramientas
 const TOOLS_STRUCTURE = {
   preventa: [
     { name: "Volantes Digitales", key: "Volantes Digitales", icon: ShareIcon },
@@ -45,7 +38,7 @@ const TOOLS_STRUCTURE = {
   ],
 };
 
-// ✅ MOVER FUERA DEL COMPONENTE - FUNCIÓN ESTÁTICA
+// Función auxiliar
 const mapUrlsToTools = (tools, urls) =>
   tools.map((tool) => ({
     ...tool,
@@ -54,20 +47,22 @@ const mapUrlsToTools = (tools, urls) =>
 
 const ClientePage = ({ data = {}, refetch }) => {
   const { user } = useAuth();
-
-  const isAdmin = user && user.role === "admin"; // isServiceUser ya no es necesario si asumimos que cualquier usuario puede ver el contenido // Extraer datos de texto
+  const isAdmin = user && user.role === 'admin';
 
   const diagnostic = data.diagnostic || "";
   const specificObjective = data.specificObjective || "";
 
-  // ✅ ESTADO INICIAL CORRECTO
+  // ✅ NUEVO ESTADO PARA TOOL MODAL
+  const [editingTool, setEditingTool] = useState(null);
+
+  // Estado para herramientas
   const [serviceTools, setServiceTools] = useState({
     preventa: [],
     venta: [],
     postventa: [],
   });
 
-  // ✅ useEffect ÚNICO Y OPTIMIZADO
+  // Sincronizar herramientas con datos
   useEffect(() => {
     if (data && Object.keys(data).length > 0) {
       setServiceTools({
@@ -78,43 +73,20 @@ const ClientePage = ({ data = {}, refetch }) => {
     }
   }, [data]);
 
-  // ✅ useCallback PARA EVITAR RECREACIONES
-  const [editingUrl, setEditingUrl] = useState({
-    toolName: null,
-    toolKey: null,
-    url: "",
-    currentUrl: "",
-  });
-
-  const startUrlEdit = useCallback((toolName, toolKey, currentUrl) => {
-    setEditingUrl({ toolName, toolKey, url: currentUrl, currentUrl });
+  // ✅ NUEVA FUNCIÓN para editar herramientas
+  const startToolUrlEdit = useCallback((tool) => {
+    setEditingTool(tool);
   }, []);
 
-  const handleUrlUpdate = useCallback((updatedPayload) => {
-    const updatedKey = Object.keys(updatedPayload)[0];
-    const updatedValue = Object.values(updatedPayload)[0];
-
-    setServiceTools(prev => ({
-      preventa: prev.preventa.map(tool => 
-        tool.key === updatedKey ? { ...tool, url: updatedValue } : tool
-      ),
-      venta: prev.venta.map(tool => 
-        tool.key === updatedKey ? { ...tool, url: updatedValue } : tool
-      ),
-      postventa: prev.postventa.map(tool => 
-        tool.key === updatedKey ? { ...tool, url: updatedValue } : tool
-      ),
-    }));
-
+  // ✅ NUEVA FUNCIÓN para manejar actualización exitosa
+  const handleToolUrlUpdate = useCallback(() => {
     if (refetch) {
       refetch();
     }
+    setEditingTool(null);
   }, [refetch]);
 
-  const closeModal = useCallback(() => {
-    setEditingUrl({ toolName: null });
-  }, []);
-
+  // Renderizar botones de herramientas
   const renderToolButton = useCallback((tool) => {
     const isWhatsapp = tool.type === "whatsapp";
     const buttonClasses = isWhatsapp
@@ -134,52 +106,53 @@ const ClientePage = ({ data = {}, refetch }) => {
         </a>
         {isAdmin && (
           <button
-            onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
+            onClick={() => startToolUrlEdit(tool)}
             className="w-full inline-flex items-center justify-center px-4 py-1 text-sm text-prolinco-primary hover:text-prolinco-secondary font-semibold"
           >
-            Cambiar URL
+            <PencilIcon className="h-4 w-4 mr-1" /> Cambiar URL
           </button>
         )}
       </div>
     );
-  }, [isAdmin, startUrlEdit]);
+  }, [isAdmin, startToolUrlEdit]);
 
   return (
     <div className="animate-fadeIn relative">
-      {/* Modal de Edición de URL (solo necesitamos el modal de URL) */}
-      <EditModal
-        type="url"
-        section="Cliente"
-        editingData={{ ...editingUrl, field: editingUrl.toolKey }}
-        onComplete={handleUrlUpdate}
-        onClose={closeModal}
-      />
-      {/* Diagnóstico y Objetivo (USANDO EditableField) */}
+      {/* ✅ NUEVO MODAL PARA HERRAMIENTAS */}
+      {editingTool && (
+        <ToolUrlModal
+          tool={editingTool}
+          section="servicio"
+          onComplete={handleToolUrlUpdate}
+          onClose={() => setEditingTool(null)}
+        />
+      )}
+
+      {/* Diagnóstico y Objetivo */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-        {/* 1. Diagnóstico */}
         <EditableField
           initialContent={diagnostic}
           section="Cliente"
           subsection="Diagnóstico"
-          onUpdate={refetch} // Refresca los datos del padre después de guardar
+          onUpdate={refetch}
         />
-        {/* 2. Objetivo Específico */}
         <EditableField
           initialContent={specificObjective}
           section="Cliente"
           subsection="Objetivo Específico"
-          onUpdate={refetch} // Refresca los datos del padre después de guardar
+          onUpdate={refetch}
         />
       </div>
-      {/* Sección de Herramientas (URLs EDITABLES) */}
+
+      {/* Sección de Herramientas */}
       <h2 className="text-2xl font-black text-prolinco-dark mb-4 border-b border-gray-300 pb-2">
         Herramientas por Fase del Ciclo de Servicio
       </h2>
+
       {/* Subsecciones Preventa, Venta, Postventa */}
       {Object.keys(serviceTools).map((phase) => (
         <section key={phase} className="mb-8">
           <h3 className="text-xl font-bold text-prolinco-secondary mb-3 bg-gray-100 p-3 rounded-t-lg border-b border-prolinco-primary">
-            {/* Capitalizar el nombre de la fase */}
             {phase.charAt(0).toUpperCase() + phase.slice(1)}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4 bg-white rounded-b-lg shadow-inner">
