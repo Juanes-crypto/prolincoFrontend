@@ -2,6 +2,7 @@
 
 import React from "react";
 import Card from "../components/Card";
+import prolincoLogo from "../../public/img/logo-prolinco.jpg";
 
 // ✅ Importamos SOLO los iconos que se usan en el cuerpo del componente (Versión 2/3)
 import {
@@ -42,10 +43,10 @@ const Dashboard = () => {
             Por ahora, usamos un placeholder. Puedes poner la imagen en la carpeta public/images/
           */}
           <img 
-            src="/public/img/logo-prolinco.jpg" // Cambia esta ruta por la correcta
-            alt="Lácteos Prolinco - Identidad Corporativa"
-            className="h-32 w-auto"
-          />
+          src={prolincoLogo} // ✅ USAR LA VARIABLE IMPORTADA
+          alt="Lácteos Prolinco - Identidad Corporativa"
+          className="h-32 w-auto"
+        />
         </div>
         <p className="text-xl text-gray-600 text-center">
           Portal Estratégico de Intervención Empresarial
