@@ -26,6 +26,9 @@ import Sidebar from "./components/Sidebar";
 import AuthGuard from "./components/AuthGuard";
 import WhatsAppFloat from "./components/WhatsAppFloat"; // 🌟 NUEVO
 
+// ✅ NUEVO: import hooks de sesión
+import { useSessionTimeout, useTabCloseListener } from './hooks/useSessionTimeout';
+
 const MainLayout = () => {
     return (
         <div className="flex min-h-screen bg-prolinco-light">
@@ -38,6 +41,10 @@ const MainLayout = () => {
 };
 
 function App() {
+    // Sistema de seguridad: tiempo de inactividad y detectar cierre de pestaña
+    useSessionTimeout(10); // 10 minutos de inactividad
+    useTabCloseListener();
+    
     return (
         <Router>
             <Routes>

@@ -1,4 +1,4 @@
-// frontend/src/pages/OperationalToolsPage.jsx (VERSIÓN ARQUITECTÓNICA PREMIUM)
+// frontend/src/pages/OperationalToolsPage.jsx (VERSIÓN FINAL CORREGIDA Y COMPLETA)
 
 import React, { useState } from 'react';
 import useOperationalData from '../hooks/useOperationalData';
@@ -6,7 +6,7 @@ import ClientePage from './ClientePage';
 import TalentoHumanoPage from './TalentoHumanoPage';
 import AdministracionPage from './AdministracionPage';
 
-// 🆕 DEFINICIÓN MEJORADA DE SECCIONES CON ICONOS Y DESCRIPCIONES
+// Definición de las secciones de la plataforma
 const sections = [
     { 
         key: 'servicio', 
@@ -37,14 +37,14 @@ const sections = [
 const OperationalToolsPage = () => {
     const [activeSection, setActiveSection] = useState(sections[0].key);
     
-    // Carga REAL de datos con el hook
+    // Carga centralizada de datos con el hook personalizado
     const { data, loading, error, refetch } = useOperationalData();
 
-    // 🆕 FUNCIÓN MEJORADA PARA RENDERIZAR SECCIÓN
+    // Función para renderizar la sección activa
     const renderSection = () => {
         if (loading) {
             return (
-                <div className="flex items-center justify-center py-20">
+                <div className="flex items-center justify-center h-full p-10">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-prolinco-primary mx-auto mb-4"></div>
                         <p className="text-lg text-prolinco-dark font-medium">Cargando contenido estratégico...</p>
@@ -56,16 +56,18 @@ const OperationalToolsPage = () => {
         
         if (error || !data) {
             return (
-                <div className="text-center py-20">
-                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                    <h3 className="text-xl font-bold text-red-600 mb-2">Error al cargar datos</h3>
-                    <p className="text-gray-600">{error || "No se pudieron cargar los datos estratégicos."}</p>
-                    <button 
-                        onClick={refetch}
-                        className="mt-4 bg-prolinco-primary text-prolinco-dark font-semibold px-6 py-2 rounded-lg hover:bg-prolinco-primary/90 transition-colors"
-                    >
-                        Reintentar
-                    </button>
+                <div className="flex items-center justify-center h-full p-10">
+                    <div className="text-center">
+                        <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                        <h3 className="text-xl font-bold text-red-600 mb-2">Error al cargar datos</h3>
+                        <p className="text-gray-600">{error?.message || "No se pudieron cargar los datos estratégicos."}</p>
+                        <button 
+                            onClick={refetch}
+                            className="mt-6 bg-prolinco-primary text-prolinco-dark font-semibold px-6 py-2 rounded-lg hover:bg-prolinco-primary/90 transition-colors"
+                        >
+                            Reintentar
+                        </button>
+                    </div>
                 </div>
             );
         }
@@ -75,46 +77,49 @@ const OperationalToolsPage = () => {
 
         switch (activeSection) {
             case 'servicio':
-                return <ClientePage data={sectionData} refetch={refetch} />;
+                // ✨ CORRECCIÓN CLAVE: Añadir la prop 'key' para forzar un re-montaje limpio del componente
+                return <ClientePage key={activeSection} data={sectionData} refetch={refetch} />;
             case 'talento':
-                return <TalentoHumanoPage data={sectionData} refetch={refetch} />;
+                // ✨ CORRECCIÓN CLAVE: Añadir la prop 'key' para forzar un re-montaje limpio del componente
+                return <TalentoHumanoPage key={activeSection} data={sectionData} refetch={refetch} />;
             case 'admin':
-                return <AdministracionPage data={sectionData} refetch={refetch} />;
+                // ✨ CORRECCIÓN CLAVE: Añadir la prop 'key' para forzar un re-montaje limpio del componente
+                return <AdministracionPage key={activeSection} data={sectionData} refetch={refetch} />;
             default:
                 return (
-                    <div className="text-center py-20">
-                        <div className="text-6xl mb-4">🎯</div>
-                        <h3 className="text-xl font-bold text-prolinco-dark mb-2">Seleccione una sección</h3>
-                        <p className="text-gray-600">Elija un módulo del menú lateral para comenzar</p>
+                    <div className="flex items-center justify-center h-full p-10">
+                        <div className="text-center">
+                            <div className="text-6xl mb-4">🎯</div>
+                            <h3 className="text-xl font-bold text-prolinco-dark mb-2">Seleccione una sección</h3>
+                            <p className="text-gray-600">Elija un módulo del menú lateral para comenzar</p>
+                        </div>
                     </div>
                 );
         }
     };
 
-    // 🆕 COMPONENTE MEJORADO PARA ITEMS DE NAVEGACIÓN
+    // Componente para los ítems de navegación del sidebar
     const NavItem = ({ section }) => {
         const isActive = activeSection === section.key;
         
         return (
             <button
                 onClick={() => setActiveSection(section.key)}
-                className={`w-full text-left p-4 rounded-2xl transition-all duration-500 border-l-4 mb-3 group ${
+                className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border-l-4 mb-3 group relative overflow-hidden ${
                     isActive
-                        ? 'bg-white shadow-2xl border-prolinco-primary transform translate-x-2'
-                        : 'bg-gray-50 border-transparent hover:bg-white hover:shadow-lg hover:border-gray-300'
+                        ? 'bg-white shadow-lg border-prolinco-primary transform translate-x-2'
+                        : 'bg-gray-50 border-transparent hover:bg-white hover:shadow-md hover:border-gray-300'
                 }`}
             >
-                <div className="flex items-start space-x-4">
-                    {/* 🆕 NÚMERO Y ICONO */}
+                <div className="flex items-start space-x-4 relative z-10">
                     <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
                         isActive 
-                            ? 'bg-prolinco-primary text-white shadow-lg'
+                            ? 'bg-prolinco-primary text-white shadow-md'
                             : 'bg-white text-gray-600 shadow-sm group-hover:bg-prolinco-primary group-hover:text-white'
                     }`}>
                         <span className="text-lg font-bold">{section.number}</span>
                     </div>
                     
-                    {/* 🆕 CONTENIDO */}
                     <div className="flex-1 min-w-0">
                         <h3 className={`font-bold text-lg mb-1 transition-colors duration-300 ${
                             isActive ? 'text-prolinco-dark' : 'text-gray-700 group-hover:text-prolinco-dark'
@@ -128,28 +133,23 @@ const OperationalToolsPage = () => {
                         </p>
                     </div>
                     
-                    {/* 🆕 INDICADOR ACTIVO */}
                     {isActive && (
-                        <div className="flex-shrink-0 w-2 h-2 bg-prolinco-primary rounded-full mt-2"></div>
+                        <div className="absolute top-2 right-2 flex-shrink-0 w-2 h-2 bg-prolinco-primary rounded-full"></div>
                     )}
                 </div>
                 
-                {/* 🆕 EFECTO DE GRADIENTE SUTIL */}
-                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-5 transition-opacity duration-300 ${section.color}`}></div>
+                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-10 transition-opacity duration-300 ${section.color}`}></div>
             </button>
         );
     };
 
     return (
-        // 🆕 DISEÑO PRINCIPAL ARQUITECTÓNICO
-        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-white">
-            
-            {/* 🆕 SIDEBAR MEJORADO */}
-            <aside className="w-80 bg-white p-6 shadow-xl border-r border-gray-200">
-                {/* 🆕 HEADER PREMIUM */}
-                <div className="mb-8">
-                    <div className="flex items-center space-x-3 mb-2">
-                        <div className="w-10 h-10 bg-prolinco-primary rounded-xl flex items-center justify-center">
+        <div className="flex h-screen bg-gray-50">
+            {/* Sidebar de Navegación */}
+            <aside className="w-96 bg-white p-6 shadow-xl border-r border-gray-100 flex flex-col flex-shrink-0">
+                <header className="mb-8">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-prolinco-primary rounded-xl flex items-center justify-center shadow-md">
                             <span className="text-white font-bold text-lg">⚡</span>
                         </div>
                         <div>
@@ -162,17 +162,15 @@ const OperationalToolsPage = () => {
                         </div>
                     </div>
                     
-                    {/* 🆕 INDICADOR DE ESTADO */}
-                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
                         <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="text-sm font-medium text-green-700">Sistema Operacional</span>
                         </div>
                     </div>
-                </div>
+                </header>
 
-                {/* 🆕 NAVEGACIÓN MEJORADA */}
-                <nav>
+                <nav className="flex-1 overflow-y-auto pr-2">
                     <div className="mb-4">
                         <div className="flex items-center space-x-2 px-2">
                             <div className="w-4 h-0.5 bg-prolinco-primary rounded-full"></div>
@@ -189,77 +187,33 @@ const OperationalToolsPage = () => {
                     </div>
                 </nav>
                 
-                {/* 🆕 FOOTER INFORMATIVO */}
-                <div className="mt-8 pt-6 border-t border-gray-200">
+                <footer className="mt-8 pt-6 border-t border-gray-200">
                     <div className="text-center">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-semibold text-gray-700">
                             {sections.find(s => s.key === activeSection)?.name || 'Seleccione un módulo'}
                         </p>
-                        <div className="flex justify-center space-x-1 mt-2">
-                            {sections.map((section, index) => (
+                        <div className="flex justify-center space-x-2 mt-2">
+                            {sections.map((section) => (
                                 <div 
-                                    key={section.key}
-                                    className={`w-1 h-1 rounded-full transition-all duration-300 ${
+                                    key={`dot-${section.key}`}
+                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
                                         activeSection === section.key ? 'bg-prolinco-primary' : 'bg-gray-300'
                                     }`}
                                 ></div>
                             ))}
                         </div>
                     </div>
-                </div>
+                </footer>
             </aside>
 
-            {/* 🆕 ÁREA DE CONTENIDO PRINCIPAL MEJORADA */}
-            <main className="flex-1 p-8 overflow-auto">
-                {/* 🆕 HEADER DINÁMICO */}
-                <header className="mb-8">
-                    {sections.find(s => s.key === activeSection) && (
-                        <div className="flex items-center space-x-4 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-prolinco-primary to-prolinco-secondary rounded-xl flex items-center justify-center text-white text-xl shadow-lg">
-                                {sections.find(s => s.key === activeSection)?.icon}
-                            </div>
-                            <div>
-                                <h1 className="text-4xl font-black text-prolinco-dark mb-1">
-                                    {sections.find(s => s.key === activeSection)?.name}
-                                </h1>
-                                <p className="text-gray-600 text-lg">
-                                    {sections.find(s => s.key === activeSection)?.description}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* 🆕 BARRA DE ESTADO */}
-                    <div className="flex items-center space-x-6 text-sm text-gray-500">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Conectado</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span>{data ? 'Datos cargados' : 'Cargando...'}</span>
-                        </div>
-                    </div>
-                </header>
-
-                {/* 🆕 CONTENIDO PRINCIPAL CON MEJOR ESTRUCTURA */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            {/* Área de Contenido Principal */}
+            <main className="flex-1 p-8 overflow-y-auto">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 h-full">
                     {renderSection()}
                 </div>
-                
-                {/* 🆕 FOOTER DE CONTEXTO */}
-                <footer className="mt-8 text-center">
-                    <div className="inline-flex items-center space-x-4 text-sm text-gray-500">
-                        <span>Plataforma Estratégica Prolinco</span>
-                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                        <span>Versión 2.0</span>
-                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                        <span>2024</span>
-                    </div>
-                </footer>
             </main>
         </div>
     );
 };
-
+//hola  todos
 export default OperationalToolsPage;

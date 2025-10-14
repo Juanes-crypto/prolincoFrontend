@@ -64,8 +64,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={value}>
-     {children}
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout: () => {
+          // Limpiar localStorage
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          // Resetear estado
+          setUser(null);
+          // Redirigir a login
+          window.location.href = "/login";
+        },
+        isAuthenticated: !!user,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };
