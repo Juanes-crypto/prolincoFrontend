@@ -121,7 +121,7 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
                         </a>
                         {isAdmin && (
                             <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); startUrlEdit(tool.name, tool.key, tool.url); }} className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group">
-                                <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                                <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform " />
                                 {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}
                             </button>
                         )}
