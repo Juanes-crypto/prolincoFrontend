@@ -3,22 +3,26 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { TruckIcon, Cog6ToothIcon, ClipboardDocumentCheckIcon , LinkIcon, EnvelopeIcon , ChatBubbleLeftEllipsisIcon, PhoneIcon, ShareIcon, ChartBarIcon, PencilIcon } from '@heroicons/react/24/solid';
-import { API } from '../api/api'; 
+import { API } from '../api/api';
 // *** NUEVO IMPORT ***
 import EditModal from '../components/EditModal';
+// *** UNIFIED AUTH IMPORT ***
+import { useAuth } from '../context/AuthProvider';
 
 const Service = () => {
+    // *** UNIFIED AUTH USAGE ***
+    const { user } = useAuth();
+
     const [content, setContent] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     // *** ESTADO UNIFICADO DE EDICIÓN ***
-    const [editingText, setEditingText] = useState({ field: null, value: '' }); 
+    const [editingText, setEditingText] = useState({ field: null, value: '' });
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '', currentUrl: '' });
-    
-    const userRole = localStorage.getItem('userRole');
-    const isAdmin = userRole === 'admin';
-    const isServiceUser = userRole === 'servicio';
+
+    const isAdmin = user && user.role === 'admin';
+    const isServiceUser = user && user.role === 'servicio';
 
     const initialTools = {
         preventa: [
@@ -63,7 +67,7 @@ const Service = () => {
 
             setContent(data);
             setError(null);
-        } catch (_err) {
+        } catch {
             setError("Error al cargar el contenido de Servicio al Cliente.");
         } finally {
             setLoading(false);

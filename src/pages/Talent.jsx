@@ -3,22 +3,26 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { UsersIcon, Cog6ToothIcon, ClipboardDocumentCheckIcon , LinkIcon, DocumentTextIcon, PencilIcon } from '@heroicons/react/24/solid';
-import { API } from '../api/api'; 
+import { API } from '../api/api';
 // *** NUEVO IMPORT ***
 import EditModal from '../components/EditModal';
+// *** UNIFIED AUTH IMPORT ***
+import { useAuth } from '../context/AuthProvider';
 
 const Talent = () => {
+    // *** UNIFIED AUTH USAGE ***
+    const { user } = useAuth();
+
     const [content, setContent] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     // *** ESTADO UNIFICADO DE EDICIÓN ***
-    const [editingText, setEditingText] = useState({ field: null, value: '' }); 
+    const [editingText, setEditingText] = useState({ field: null, value: '' });
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '', currentUrl: '' });
-    
-    const userRole = localStorage.getItem('userRole');
-    const isAdmin = userRole === 'admin';
-    const isTalentUser = userRole === 'servicio'; 
+
+    const isAdmin = user && user.role === 'admin';
+    const isTalentUser = user && user.role === 'talento';
     
     const initialTools = [
         { name: 'Manual de Funciones', key: 'manualFuncionesUrl', icon: DocumentTextIcon },
@@ -44,7 +48,7 @@ const Talent = () => {
 
             setContent(data);
             setError(null);
-        } catch (_err) { // Limpiamos la advertencia del 'err'
+        } catch {
             setError("Error al cargar el contenido de Talento Humano.");
         } finally {
             setLoading(false);

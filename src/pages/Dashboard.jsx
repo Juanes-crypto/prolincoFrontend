@@ -15,11 +15,16 @@ import {
   UsersIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/solid";
+// *** UNIFIED AUTH IMPORT ***
+import { useAuth } from "../context/AuthProvider";
 
 const Dashboard = () => {
-  // Info del usuario obtenida del localStorage
-  const documentNumber = localStorage.getItem("documentNumber") || "N/A";
-  const userRole = localStorage.getItem("userRole") || "invitado";
+  // *** UNIFIED AUTH USAGE ***
+  const { user } = useAuth();
+
+  // Info del usuario obtenida del contexto
+  const documentNumber = user?.documentNumber || "N/A";
+  const userRole = user?.role || "invitado";
   const userRoleDisplay = userRole.charAt(0).toUpperCase() + userRole.slice(1);
 
   // 🆕 ESTADO PARA DATOS DINÁMICOS

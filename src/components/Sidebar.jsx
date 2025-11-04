@@ -1,6 +1,6 @@
 // frontend/src/components/Sidebar.jsx (VERSIÓN PREMIUM ARQUITECTÓNICA)
 
-import React, { useContext } from 'react';
+import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
     TruckIcon, 
@@ -18,8 +18,8 @@ import {
     ChartPieIcon
 } from '@heroicons/react/24/solid'; 
 
-// 🌟 Importar el contexto 🌟
-import { AuthContext } from '../context/AuthContextDefinition'; 
+// *** UNIFIED AUTH IMPORT ***
+import { useAuth } from '../context/AuthProvider';
 
 // 🆕 DEFINICIÓN DE NAVEGACIÓN MEJORADA CON ICONOS ESPECÍFICOS
 const navItems = [
@@ -75,7 +75,8 @@ const navItems = [
 ];
 
 const Sidebar = () => {
-    const { user, logout } = useContext(AuthContext); 
+    // *** UNIFIED AUTH USAGE ***
+    const { user, logout } = useAuth();
     const location = useLocation();
     const userRole = user?.role || 'invitado';
 

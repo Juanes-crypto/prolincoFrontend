@@ -13,8 +13,13 @@ import {
 import { API } from "../api/api";
 // *** NUEVO IMPORT ***
 import EditModal from "../components/EditModal";
+// *** UNIFIED AUTH IMPORT ***
+import { useAuth } from "../context/AuthProvider";
 
 const Admin = () => {
+  // *** UNIFIED AUTH USAGE ***
+  const { user } = useAuth();
+
   const [content, setContent] = useState({ organizational: {}, admin: {} });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,8 +37,7 @@ const Admin = () => {
     currentUrl: "",
   });
 
-  const userRole = localStorage.getItem("userRole");
-  const isAdmin = userRole === "admin";
+  const isAdmin = user && user.role === "admin";
 
   // Datos de las herramientas (las URLs vendrán del backend)
   const initialTools = [
@@ -67,7 +71,7 @@ const Admin = () => {
         admin: adminResponse.data,
       });
       setError(null);
-    } catch (_err) {
+    } catch {
       setError(
         "Error al cargar el contenido. Asegúrate de que el backend esté activo y el token sea válido."
       );

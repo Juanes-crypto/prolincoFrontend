@@ -44,13 +44,10 @@ const EditableField = ({ initialContent, section, subsection, onUpdate }) => {
                 },
             };
 
-            // ⚠️ NOTA: Asumimos que el backend tendrá un endpoint para guardar contenido operativo
-            // Usaremos POST para crear o PUT para actualizar el contenido basado en section/subsection
-            await API.post('/operational/content', {
-                section,
-                subsection,
-                content: content.trim(),
-            }, config);
+            // Usar el mismo endpoint que EditModal para consistencia
+            const endpointSection = section.toLowerCase().replace(' ', '-');
+            const payload = { [subsection]: content.trim() };
+            await API.put(`/content/${endpointSection}`, payload, config);
 
             setIsEditing(false);
             alert("Contenido actualizado con éxito.");

@@ -1,6 +1,7 @@
 // components/ToolUrlModal.jsx - VERSIÓN COMPLETA Y CORREGIDA
 import React, { useState } from 'react';
 import { XMarkIcon, LinkIcon } from '@heroicons/react/24/outline';
+import { API } from '../api/api';
 
 const ToolUrlModal = ({ tool, section, onComplete, onClose }) => {
     const [url, setUrl] = useState(tool?.url || '');
@@ -20,14 +21,8 @@ const ToolUrlModal = ({ tool, section, onComplete, onClose }) => {
         setError('');
 
         try {
-            // Simulamos la llamada a la API - DEBES REEMPLAZAR CON TU ENDPOINT REAL
-            console.log(`Actualizando URL para ${tool.name}:`, url);
-            
-            // Aquí va tu llamada real a la API:
-            // await API.put(`/content/${section}/tool/${tool.key}`, { url });
-            
-            // Simulamos un delay para testing
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Usar el endpoint correcto para herramientas según el backend
+            await API.put(`/content/${section}/tool/${tool.key}`, { url: url.trim() });
             
             // Éxito - cerramos modal y refrescamos datos
             onComplete();
