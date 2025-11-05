@@ -100,7 +100,7 @@ const ChangePassword = () => {
             } else {
                 setError(
                     err.response?.data?.message ||
-                    "Error al cambiar la contraseña (Verifique conexión)."
+                    "Atension."
                 );
             }
         } finally {
