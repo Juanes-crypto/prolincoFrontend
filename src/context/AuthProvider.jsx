@@ -48,25 +48,15 @@ export const AuthProvider = ({ children }) => {
     setToken(userToken);
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.clear();
-  };
 
-  const value = {
-    user,
-    token,
-    login,
-    logout,
-    setUser,
-    isAuthLoading,
-  };
+
+
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        token,
         login,
         logout: () => {
           // Limpiar localStorage
@@ -77,7 +67,9 @@ export const AuthProvider = ({ children }) => {
           // Redirigir a login
           window.location.href = "/login";
         },
+        setUser,
         isAuthenticated: !!user,
+        isAuthLoading,
       }}
     >
       {children}

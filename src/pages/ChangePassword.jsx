@@ -78,18 +78,21 @@ const ChangePassword = () => {
                 config
             );
 
-            setMessage(response.data.message || "Contraseña actualizada con éxito."); // 1. Actualizar el estado GLOBAL del usuario
+            // Solo mostrar mensaje de éxito si la respuesta es exitosa
+            setMessage(response.data.message || "Contraseña actualizada con éxito.");
 
+            // 1. Actualizar el estado GLOBAL del usuario
             setUser({
                 ...user,
                 isPasswordSet: true,
-            }); 
-            
-            // 2. Redirección forzada con Recarga
+            });
+
+            // 2. Redirección forzada con Recarga (solo después de éxito)
             setTimeout(() => {
                 window.location.href = "/";
-            }, 100);
+            }, 2000);
         } catch (err) {
+            console.error("Error cambiando contraseña:", err);
             if (err.response?.status === 401 || err.response?.status === 403) {
                 setError(
                     "Sesión expirada o inválida. Por favor, inicie sesión de nuevo."
@@ -100,13 +103,13 @@ const ChangePassword = () => {
             } else {
                 setError(
                     err.response?.data?.message ||
-                    "Atension."
+                    "Error al cambiar la contraseña. Inténtalo de nuevo."
                 );
             }
         } finally {
             setLoading(false);
         }
-    }; 
+    };
     // mostramos null temporalmente para evitar errores en el JSX.
     if (!user) {
         return null;

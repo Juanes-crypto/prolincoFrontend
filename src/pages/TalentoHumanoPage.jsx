@@ -120,7 +120,7 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
                             {tool.isConfigured && (<ArrowTopRightOnSquareIcon className="h-4 w-4 opacity-80" />)}
                         </a>
                         {isAdmin && (
-                            <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); startUrlEdit(tool.name, tool.key, tool.url); }} className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group">
+                            <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); startUrlEdit(tool.name, tool.key, tool.url); }} className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary focus:ring-offset-2">
                                 <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform " />
                                 {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}
                             </button>

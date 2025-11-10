@@ -233,7 +233,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                         {isAdmin && (
                             <button
                                 onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
-                                className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group"
+                                className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary focus:ring-offset-2"
                             >
                                 <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                                 {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}
@@ -359,6 +359,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                             subsection="diagnostic"
                             onUpdate={refetch}
                             showTitle={false}
+                            placeholder="Describe el diagnóstico administrativo actual..."
                         />
                     </div>
 

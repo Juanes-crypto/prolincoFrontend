@@ -4,7 +4,7 @@ import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid';
 
 const WhatsAppFloat = () => {
   // Número de WhatsApp de la empresa (formato internacional sin +)
-  const phoneNumber = '573218043056'; // 🔄 REEMPLAZA CON EL NÚMERO REAL
+  const phoneNumber = '573218043056';
   
   // Mensaje predeterminado
   const defaultMessage = 'Hola, me gustaría conocer más sobre los productos de Lacteos Prolinco';

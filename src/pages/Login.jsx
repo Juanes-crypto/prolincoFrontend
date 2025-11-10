@@ -63,6 +63,7 @@ const Login = () => {
             // No necesitamos window.location.href, solo el contexto se actualiza y React lo maneja.
             // La redirección ocurrirá automáticamente gracias al "if (user)" de arriba
             // o gracias al AuthGuard en la ruta /.
+            // Para registro, no redirigir inmediatamente, dejar que el AuthGuard maneje la lógica
 
         } catch (err) {
             setError(err.response?.data?.message || 'Error de conexión o credenciales inválidas.');

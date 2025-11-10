@@ -173,7 +173,7 @@ const Talent = () => {
                     <p className="whitespace-pre-line">{content.specificObjective || 'Aún no se ha definido el objetivo de Talento Humano.'}</p>
                     {(isAdmin || isTalentUser) && (
                         <button 
-                            onClick={() => startTextEdit('specificObjective', content.specificObjective || '')}
+                            onClick={() => startTextEdit('objetivos específicos', content.specificObjective || '')}
                             className="mt-4 text-sm text-prolinco-primary hover:text-prolinco-secondary font-semibold flex items-center"
                         >
                             <PencilIcon className="h-4 w-4 mr-1" /> Editar

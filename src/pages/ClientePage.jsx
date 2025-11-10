@@ -345,8 +345,8 @@ const ClientePage = ({ data = {}, refetch }) => {
             </div>
             <EditableField
               initialContent={diagnostic}
-              section="Cliente"
-              subsection="Diagnóstico"
+              section="servicio"
+              subsection="diagnostic"
               onUpdate={refetch}
             />
           </div>
@@ -358,8 +358,8 @@ const ClientePage = ({ data = {}, refetch }) => {
             </div>
             <EditableField
               initialContent={specificObjective}
-              section="Cliente"
-              subsection="Objetivo Específico"
+              section="servicio"
+              subsection="specificObjective"
               onUpdate={refetch}
             />
           </div>
