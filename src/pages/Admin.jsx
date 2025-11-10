@@ -218,7 +218,7 @@ const Admin = () => {
               onClick={() =>
                 startTextEdit(
                   "admin",
-                  "diagnostic",
+                  "diagnóstico",
                   content.admin.diagnostic || ""
                 )
               }
@@ -239,7 +239,7 @@ const Admin = () => {
               onClick={() =>
                 startTextEdit(
                   "admin",
-                  "specificObjective",
+                  "objetivo específico",
                   content.admin.specificObjective || ""
                 )
               }

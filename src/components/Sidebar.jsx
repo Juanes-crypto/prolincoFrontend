@@ -37,17 +37,24 @@ const navItems = [
         role: ['admin', 'talento', 'servicio'],
         description: 'Herramientas centrales'
     },
-    { 
-        name: 'Talento Humano', 
-        path: '/talento-humano', 
-        icon: UserGroupIcon, 
+    {
+        name: 'Talento Humano',
+        path: '/talento-humano',
+        icon: UserGroupIcon,
         role: ['admin', 'servicio', 'basico', 'talento'],
         description: 'Gestión de personal'
     },
-    { 
-        name: 'Gestión de Archivos', 
-        path: '/archivos', 
-        icon: FolderIcon, 
+    {
+        name: 'Servicio al Cliente',
+        path: '/servicio',
+        icon: TruckIcon,
+        role: ['admin', 'servicio', 'basico', 'talento'],
+        description: 'Servicio al cliente'
+    },
+    {
+        name: 'Gestión de Archivos',
+        path: '/archivos',
+        icon: FolderIcon,
         role: ['admin', 'talento', 'servicio'],
         description: 'Documentos y recursos'
     },
@@ -210,7 +217,7 @@ const Sidebar = () => {
                         </div>
                         <div className="space-y-2">
                             {filteredNavItems
-                                .filter(item => ['/talento-humano', '/archivos', '/administracion'].includes(item.path))
+                                .filter(item => ['/talento-humano', '/servicio', '/archivos', '/administracion'].includes(item.path))
                                 .map((item) => (
                                     <NavItem key={item.name} item={item} />
                                 ))}
