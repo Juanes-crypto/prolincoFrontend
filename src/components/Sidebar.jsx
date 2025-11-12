@@ -2,40 +2,32 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-    TruckIcon, 
-    UsersIcon, 
-    HomeIcon, 
-    DocumentTextIcon, 
-    ClockIcon, 
+import {
+    TruckIcon,
+    UsersIcon,
+    HomeIcon,
+    DocumentTextIcon,
+    ClockIcon,
     ArrowLeftOnRectangleIcon,
     ChartBarIcon,
     CubeIcon,
     BuildingStorefrontIcon,
     UserGroupIcon,
     FolderIcon,
-    ShieldCheckIcon,
-    ChartPieIcon
-} from '@heroicons/react/24/solid'; 
+    ShieldCheckIcon
+} from '@heroicons/react/24/solid';
 
 // *** UNIFIED AUTH IMPORT ***
 import { useAuth } from '../context/AuthProvider';
 
 // 🆕 DEFINICIÓN DE NAVEGACIÓN MEJORADA CON ICONOS ESPECÍFICOS
 const navItems = [
-    { 
-        name: 'Dashboard', 
-        path: '/', 
-        icon: HomeIcon, 
+    {
+        name: 'Dashboard',
+        path: '/',
+        icon: HomeIcon,
         role: ['admin', 'talento', 'servicio', 'basico', 'invitado'],
         description: 'Panel principal'
-    },
-    { 
-        name: 'Plataforma Estratégica', 
-        path: '/plataforma', 
-        icon: ChartPieIcon, 
-        role: ['admin', 'talento', 'servicio'],
-        description: 'Herramientas centrales'
     },
     {
         name: 'Talento Humano',
@@ -200,7 +192,7 @@ const Sidebar = () => {
                         </div>
                         <div className="space-y-2">
                             {filteredNavItems
-                                .filter(item => ['/', '/plataforma'].includes(item.path))
+                                .filter(item => ['/'].includes(item.path))
                                 .map((item) => (
                                     <NavItem key={item.name} item={item} />
                                 ))}

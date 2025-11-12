@@ -62,7 +62,7 @@ const Admin = () => {
       setAdminTools(
         initialTools.map((tool) => ({
           ...tool,
-          url: urls[tool.key] || "#",
+          url: urls[tool.key] || "",
         }))
       );
 

@@ -94,10 +94,10 @@ const AdministracionPage = ({ data = {}, refetch }) => {
     const corporateValues = Array.isArray(data.corporateValues) ? data.corporateValues.join(', ') : '';
 
     // 🆕 ESTADO SIMPLIFICADO COMO SERVICE.JSX
-    const [editingUrl, setEditingUrl] = useState({ 
-        toolName: null, 
-        toolKey: null, 
-        url: '' 
+    const [editingUrl, setEditingUrl] = useState({
+        toolName: null,
+        toolKey: null,
+        url: ''
     });
     const [adminTools, setAdminTools] = useState([]);
 
@@ -112,22 +112,50 @@ const AdministracionPage = ({ data = {}, refetch }) => {
     }, {});
 
     // Sincronizar herramientas con datos del backend
-    useEffect(() => {
-        if (data && Object.keys(data).length > 0) {
-            const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => ({
+    // En AdministracionPage.jsx - CORREGIR el useEffect que mapea herramientas
+    // En AdministracionPage.jsx - corregir el mapeo
+useEffect(() => {
+    console.log('🎯 Administracion - useEffect con data:', data);
+    
+    if (data && Object.keys(data).length > 0) {
+        console.log('📊 Administracion - Tools del backend:', data.tools);
+        
+        const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => {
+            if (!data.tools) {
+                return {
+                    ...tool,
+                    url: '#',
+                    isConfigured: false
+                };
+            }
+
+            const backendTool = data.tools.find(backendTool => {
+                const backendName = backendTool.name.toLowerCase().replace(/\s/g, '');
+                const toolName = tool.name.toLowerCase().replace(/\s/g, '');
+                console.log(`🔍 Administracion - Comparando: "${backendName}" vs "${toolName}"`);
+                return backendName === toolName;
+            });
+
+            console.log(`📊 Administracion - Herramienta "${tool.name}" encontrada:`, backendTool);
+            
+            return {
                 ...tool,
-                url: data[tool.key] || '#',
-                isConfigured: data[tool.key] && data[tool.key] !== '#'
-            }));
-            setAdminTools(mappedTools);
-        } else {
-            setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({
-                ...tool,
-                url: '#',
-                isConfigured: false
-            })));
-        }
-    }, [JSON.stringify(data)]);
+                url: backendTool ? backendTool.url || '#' : '#',
+                isConfigured: backendTool && backendTool.url && backendTool.url !== '' && backendTool.url !== '#'
+            };
+        });
+        
+        console.log('🔄 Administracion - Herramientas mapeadas:', mappedTools);
+        setAdminTools(mappedTools);
+    } else {
+        console.log('📭 Administracion - No hay datos, usando valores por defecto');
+        setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({
+            ...tool,
+            url: '#',
+            isConfigured: false
+        })));
+    }
+}, [JSON.stringify(data)]);
 
     // 🆕 FUNCIONES DIRECTAS COMO SERVICE.JSX
     const startUrlEdit = (toolName, toolKey, currentUrl) => {
@@ -135,12 +163,42 @@ const AdministracionPage = ({ data = {}, refetch }) => {
         setEditingUrl({ toolName, toolKey, url: currentUrl });
     };
 
-    const handleUrlUpdate = () => {
-        console.log('✅ Administracion - handleUrlUpdate llamado');
-        if (refetch) {
-            refetch();
+    const handleUrlUpdate = (updatedData) => {
+        console.log('✅ Administracion - handleUrlUpdate llamado con:', updatedData);
+
+        if (updatedData && typeof updatedData === 'object') {
+            const key = Object.keys(updatedData)[0];
+            const newUrl = updatedData[key];
+
+            // Actualizar estado inmediatamente
+            setAdminTools(prev =>
+                prev.map(tool => {
+                    const toolMatches =
+                        tool.key === key ||
+                        tool.name.toLowerCase().replace(/\s/g, '') === key.toLowerCase().replace(/\s/g, '');
+
+                    if (toolMatches) {
+                        console.log(`🔄 Administracion - Actualizando: ${tool.name} con URL: ${newUrl}`);
+                        return {
+                            ...tool,
+                            url: newUrl,
+                            isConfigured: !!newUrl && newUrl !== '' && newUrl !== '#'
+                        };
+                    }
+                    return tool;
+                })
+            );
         }
+
         setEditingUrl({ toolName: null, toolKey: null, url: '' });
+
+        // Recargar datos después de un delay
+        setTimeout(() => {
+            if (refetch) {
+                console.log('🔄 Administracion - Forzando recarga...');
+                refetch();
+            }
+        }, 500);
     };
 
     const closeModal = () => {
@@ -155,7 +213,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
             alert(`${toolName} no está configurado. ${isAdmin ? 'Puedes configurarlo haciendo clic en "Configurar URL".' : 'Contacta al administrador.'}`);
         }
     };
-    
+
     // 🆕 RENDERIZADO CORREGIDO - PATRÓN SERVICE.JSX
     const renderToolCard = (tool) => {
         const importanceConfig = IMPORTANCE_CONFIG[tool.importance];
@@ -195,18 +253,18 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                         <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${tool.isConfigured
                             ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                          }`}>
-                          {tool.isConfigured ? (
-                            <>
-                              <CheckCircleIcon className="h-3 w-3" />
-                              <span>Configurado</span>
-                            </>
-                          ) : (
-                            <>
-                              <ExclamationTriangleIcon className="h-3 w-3" />
-                              <span>Por Configurar</span>
-                            </>
-                          )}
+                            }`}>
+                            {tool.isConfigured ? (
+                                <>
+                                    <CheckCircleIcon className="h-3 w-3" />
+                                    <span>Configurado</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ExclamationTriangleIcon className="h-3 w-3" />
+                                    <span>Por Configurar</span>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -217,12 +275,12 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                             className={`w-full inline-flex items-center justify-between p-3 rounded-xl transition-all duration-300 border ${tool.isConfigured
                                 ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-lg hover:scale-[1.02]'
                                 : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                              }`}
+                                }`}
                         >
                             <div className="flex items-center space-x-2">
                                 <LinkIcon className="h-4 w-4" />
                                 <span className="font-semibold text-sm">
-                                  {tool.isConfigured ? 'Abrir Documento' : 'No Configurado'}
+                                    {tool.isConfigured ? 'Abrir Documento' : 'No Configurado'}
                                 </span>
                             </div>
                             {tool.isConfigured && (
@@ -233,7 +291,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                         {isAdmin && (
                             <button
                                 onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
-                                className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary focus:ring-offset-2"
+                                className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary focus:ring-offset-2 cursor-pointer"
                             >
                                 <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                                 {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}
@@ -399,6 +457,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                     initialContent={diagnostic}
                                     section="admin"
                                     subsection="diagnostico"
+                                    title="Diagnóstico Administrativo"
                                     onUpdate={refetch}
                                     showTitle={false}
                                     placeholder="Describe el diagnóstico administrativo actual de la organización..."
@@ -421,7 +480,8 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                 <EditableField
                                     initialContent={specificObjective}
                                     section="admin"
-                                    subsection="Objetivos Especificos"
+                                    subsection="specificObjective"
+                                    title="Objetivo Específico"
                                     onUpdate={refetch}
                                     showTitle={false}
                                     placeholder="Define el objetivo específico para el área administrativa..."
@@ -452,6 +512,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                 icon: ViewfinderCircleIcon,
                                 content: mission,
                                 subsection: "mission",
+                                section: "organizacional",
                                 placeholder: "Define el propósito fundamental de la organización...",
                                 color: "from-prolinco-primary/10 to-prolinco-primary/5"
                             },
@@ -460,6 +521,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                 icon: LightBulbIcon,
                                 content: vision,
                                 subsection: "vision",
+                                section: "organizacional",
                                 placeholder: "Describe el futuro deseado de la organización...",
                                 color: "from-prolinco-secondary/10 to-prolinco-secondary/5"
                             },
@@ -468,6 +530,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                 icon: ShieldCheckIcon,
                                 content: corporateValues,
                                 subsection: "corporateValues",
+                                section: "organizacional",
                                 placeholder: "Separar valores por comas: Calidad, Servicio, Innovación...",
                                 color: "from-gray-100/50 to-gray-200/30",
                                 hasTip: true
@@ -487,7 +550,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                 <div className="relative z-10 flex-1 flex flex-col">
                                     <EditableField
                                         initialContent={item.content}
-                                        section="admin"
+                                        section={item.section}
                                         subsection={item.subsection}
                                         onUpdate={refetch}
                                         textAreaRows={8}
@@ -497,7 +560,7 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                     {item.hasTip && (
                                         <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
                                             <p className="text-sm text-blue-700">
-                                              💡 <strong>Formato:</strong> Separar cada valor con una coma.
+                                                💡 <strong>Formato:</strong> Separar cada valor con una coma.
                                             </p>
                                         </div>
                                     )}
@@ -535,16 +598,16 @@ const AdministracionPage = ({ data = {}, refetch }) => {
                                 </div>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-                              <div
-                                className="bg-gradient-to-r from-prolinco-primary to-prolinco-secondary h-4 rounded-full transition-all duration-1000 shadow-lg"
-                                style={{
-                                  width: `${adminTools.length ? (adminTools.filter(t => t.isConfigured).length / adminTools.length) * 100 : 0}%`
-                                }}
-                              ></div>
+                                <div
+                                    className="bg-gradient-to-r from-prolinco-primary to-prolinco-secondary h-4 rounded-full transition-all duration-1000 shadow-lg"
+                                    style={{
+                                        width: `${adminTools.length ? (adminTools.filter(t => t.isConfigured).length / adminTools.length) * 100 : 0}%`
+                                    }}
+                                ></div>
                             </div>
                             <div className="flex justify-between text-sm text-gray-500">
-                              <span>Por configurar</span>
-                              <span>Completado</span>
+                                <span>Por configurar</span>
+                                <span>Completado</span>
                             </div>
                         </div>
                     </div>
@@ -552,21 +615,21 @@ const AdministracionPage = ({ data = {}, refetch }) => {
 
                 {/* MENSAJE DE CONFIGURACIÓN PENDIENTE */}
                 {!isAdmin && adminTools.every(tool => !tool.isConfigured) && (
-                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-10 mb-16 relative overflow-hidden">
-                    <div className="absolute top-4 right-4 w-12 h-12 border border-yellow-300/50 rotate-45"></div>
-                    <div className="flex items-center space-x-6">
-                      <ExclamationTriangleIcon className="h-10 w-10 text-yellow-600 flex-shrink-0" />
-                      <div>
-                        <h4 className="text-2xl font-black text-yellow-800 mb-2">
-                          Herramientas en Configuración
-                        </h4>
-                        <p className="text-yellow-700 text-lg">
-                          Las herramientas estratégicas están siendo configuradas por el administrador.
-                          Estarán disponibles próximamente para su uso.
-                        </p>
-                      </div>
+                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-10 mb-16 relative overflow-hidden">
+                        <div className="absolute top-4 right-4 w-12 h-12 border border-yellow-300/50 rotate-45"></div>
+                        <div className="flex items-center space-x-6">
+                            <ExclamationTriangleIcon className="h-10 w-10 text-yellow-600 flex-shrink-0" />
+                            <div>
+                                <h4 className="text-2xl font-black text-yellow-800 mb-2">
+                                    Herramientas en Configuración
+                                </h4>
+                                <p className="text-yellow-700 text-lg">
+                                    Las herramientas estratégicas están siendo configuradas por el administrador.
+                                    Estarán disponibles próximamente para su uso.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                  </div>
                 )}
 
                 {/* GRID DE CATEGORÍAS CON ESPACIOS ARQUITECTÓNICOS */}
@@ -629,53 +692,53 @@ const AdministracionPage = ({ data = {}, refetch }) => {
 
                 {/* PANEL DE ADMINISTRADOR CON ELEMENTOS ARQUITECTÓNICOS */}
                 {isAdmin && (
-                  <div className="bg-gradient-to-r from-prolinco-primary/10 to-prolinco-secondary/10 border-2 border-prolinco-primary/30 rounded-3xl p-12 mt-20 relative overflow-hidden">
-                    <div className="absolute top-6 right-6 w-16 h-16 border-2 border-prolinco-primary/20 rotate-45"></div>
-                    <div className="absolute bottom-6 left-6 w-12 h-12 bg-prolinco-secondary/10 rotate-12"></div>
+                    <div className="bg-gradient-to-r from-prolinco-primary/10 to-prolinco-secondary/10 border-2 border-prolinco-primary/30 rounded-3xl p-12 mt-20 relative overflow-hidden">
+                        <div className="absolute top-6 right-6 w-16 h-16 border-2 border-prolinco-primary/20 rotate-45"></div>
+                        <div className="absolute bottom-6 left-6 w-12 h-12 bg-prolinco-secondary/10 rotate-12"></div>
 
-                    <div className="relative z-10">
-                        <div className="flex items-center space-x-6 mb-10">
-                            <ShieldCheckIcon className="h-10 w-10 text-prolinco-primary" />
-                            <h3 className="text-3xl font-black text-prolinco-dark">Panel de Administrador</h3>
-                        </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 text-base">
-                          <div className="space-y-4">
-                            <h4 className="font-black text-prolinco-dark text-xl">Configuración de URLs</h4>
-                            <ul className="text-gray-700 space-y-3">
-                              <li className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-prolinco-primary rounded-full mt-2 flex-shrink-0"></div>
-                                <span>Haz clic en "Configurar URL" en cada herramienta</span>
-                              </li>
-                              <li className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-prolinco-primary rounded-full mt-2 flex-shrink-0"></div>
-                                <span>Usa enlaces públicos de Google Drive</span>
-                              </li>
-                              <li className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-prolinco-primary rounded-full mt-2 flex-shrink-0"></div>
-                                <span>Verifica permisos de visualización pública</span>
-                              </li>
-                            </ul>
-                          </div>
-                          <div className="space-y-4">
-                            <h4 className="font-black text-prolinco-dark text-xl">Prioridades Estratégicas</h4>
-                            <ul className="text-gray-700 space-y-3">
-                              <li className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <span><strong className="text-red-600">Críticas:</strong> Configurar inmediatamente</span>
-                              </li>
-                              <li className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <span><strong className="text-orange-600">Altas:</strong> Configurar esta semana</span>
-                              </li>
-                              <li className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <span><strong className="text-blue-600">Medias:</strong> Configurar cuando sea posible</span>
-                              </li>
-                            </ul>
-                          </div>
+                        <div className="relative z-10">
+                            <div className="flex items-center space-x-6 mb-10">
+                                <ShieldCheckIcon className="h-10 w-10 text-prolinco-primary" />
+                                <h3 className="text-3xl font-black text-prolinco-dark">Panel de Administrador</h3>
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 text-base">
+                                <div className="space-y-4">
+                                    <h4 className="font-black text-prolinco-dark text-xl">Configuración de URLs</h4>
+                                    <ul className="text-gray-700 space-y-3">
+                                        <li className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 bg-prolinco-primary rounded-full mt-2 flex-shrink-0"></div>
+                                            <span>Haz clic en "Configurar URL" en cada herramienta</span>
+                                        </li>
+                                        <li className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 bg-prolinco-primary rounded-full mt-2 flex-shrink-0"></div>
+                                            <span>Usa enlaces públicos de Google Drive</span>
+                                        </li>
+                                        <li className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 bg-prolinco-primary rounded-full mt-2 flex-shrink-0"></div>
+                                            <span>Verifica permisos de visualización pública</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-4">
+                                    <h4 className="font-black text-prolinco-dark text-xl">Prioridades Estratégicas</h4>
+                                    <ul className="text-gray-700 space-y-3">
+                                        <li className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                                            <span><strong className="text-red-600">Críticas:</strong> Configurar inmediatamente</span>
+                                        </li>
+                                        <li className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                                            <span><strong className="text-orange-600">Altas:</strong> Configurar esta semana</span>
+                                        </li>
+                                        <li className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                            <span><strong className="text-blue-600">Medias:</strong> Configurar cuando sea posible</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                  </div>
                 )}
             </section>
         </div>

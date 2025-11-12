@@ -136,10 +136,14 @@ const Talent = () => {
                 onComplete={handleContentUpdate}
                 onClose={closeModal}
             />
-            <EditModal 
+            <EditModal
                 type="url"
                 section="talento"
-                editingData={editingUrl}
+                editingData={{
+                    ...editingUrl,
+                    field: editingUrl.toolKey,
+                    toolName: editingUrl.toolName
+                }}
                 onComplete={handleContentUpdate}
                 onClose={closeModal}
             />

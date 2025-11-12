@@ -15,8 +15,7 @@ import UserManagement from "./pages/UserManagement";
 import FilesPage from './pages/FilesPage';
 import AuditPage from './pages/AuditPage'; 
 
-// 🌟 PÁGINAS DE LA PLATAFORMA ESTRATÉGICA
-import OperationalToolsPage from './pages/OperationalToolsPage';
+// 🌟 PÁGINAS INDIVIDUALES
 import ClientePage from './pages/ClientePage';
 import TalentoHumanoPage from './pages/TalentoHumanoPage';
 import AdministracionPage from './pages/AdministracionPage';
@@ -63,10 +62,7 @@ function App() {
                     {/* Dashboard es la página de inicio */}
                     <Route index element={<Dashboard />} /> 
                     
-                    {/* 🌟 PLATAFORMA ESTRATÉGICA */}
-                    <Route path="plataforma" element={<OperationalToolsPage />} />
-                    
-                    {/* 🌟 RUTAS INDIVIDUALES (alternativas) */}
+                    {/* 🌟 RUTAS INDIVIDUALES */}
                     <Route path="servicio" element={<ClientePage />} />
                     <Route path="talento-humano" element={<TalentoHumanoPage />} />
                     <Route path="administracion" element={<AdministracionPage />} />

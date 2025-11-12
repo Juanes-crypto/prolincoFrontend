@@ -1,4 +1,4 @@
-// frontend/src/components/EditableField.jsx
+// frontend/src/components/EditableField.jsx (Este archivo está CORRECTO)
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthProvider'; // Importar el hook de autenticación
@@ -6,30 +6,34 @@ import { API } from '../api/api'; // Cliente API
 import { PencilSquareIcon, CheckIcon } from '@heroicons/react/24/solid';
 
 /**
- * Componente que muestra un campo de texto simple o un textarea editable para admins.
- * * @param {string} initialContent - El texto inicial a mostrar.
- * @param {string} section - La sección (ej: 'Talento Humano').
- * @param {string} subsection - El subapartado (ej: 'Diagnostico').
+ * Componente que muestra un campo de texto simple o un textarea editable.
+ * @param {string} initialContent - El texto inicial a mostrar.
+ * @param {string} section - La sección (ej: 'Servicio al Cliente', 'Talento Humano').
+ * @param {string} subsection - El subapartado (DEBE COINCIDIR CON EL MODELO: 'diagnostico', 'specificObjective', 'mission', etc.).
+ * @param {string} title - Título a mostrar (opcional, por defecto usa subsection).
  * @param {function} onUpdate - Callback a ejecutar después de una actualización exitosa.
  */
-const EditableField = ({ initialContent, section, subsection, onUpdate }) => {
+const EditableField = ({ initialContent, section, subsection, title, onUpdate }) => {
     const { user } = useAuth();
-    const isAdmin = user && user.role === 'admin';
+    
+    // CORRECCIÓN 1: Definir la variable de permiso (canEdit)
+    const sectionNormalized = section.toLowerCase().replace(' ', '');
+    const canEdit = user && (user.role === 'admin' || user.role === sectionNormalized);
 
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(initialContent || "Contenido pendiente de definir...");
     const [isLoading, setIsLoading] = useState(false);
 
-    // Sincronizar el estado interno si la prop cambia (ej: después de una actualización externa)
+    // Sincronizar el estado interno si la prop cambia
     useEffect(() => {
         setContent(initialContent || "Contenido pendiente de definir...");
     }, [initialContent]);
 
 
     const handleSave = async () => {
-        if (!isAdmin || isLoading) return;
+        // CORRECCIÓN 1: Usar canEdit para la validación
+        if (!canEdit || isLoading) return;
 
-        // Validar que el contenido no esté vacío (opcional)
         if (content.trim() === "") {
             alert("El contenido no puede estar vacío.");
             return;
@@ -44,22 +48,36 @@ const EditableField = ({ initialContent, section, subsection, onUpdate }) => {
                 },
             };
 
-            // Usar el mismo endpoint que EditModal para consistencia
-            const endpointSection = section.toLowerCase().replace(' ', '-');
+            // CORRECCIÓN 2: Mapeo de la sección para el endpoint del backend
+            const sectionMap = { 
+                'servicio al cliente': 'servicio', 
+                'talento humano': 'talento', 
+                'administracion': 'admin' 
+            };
+            const endpointSection = sectionMap[section.toLowerCase()] || section.toLowerCase().replace(' ', '');
+            
+            if (!endpointSection) {
+                 throw new Error("Error de mapeo de sección. Sección inválida.");
+            }
+
+            // El payload debe contener el campo de la base de datos (ej: diagnostic, specificObjective)
+            // 🛑 ¡ASEGÚRATE QUE LA PROP 'subsection' SEA CORRECTA EN LA PÁGINA PADRE!
             const payload = { [subsection]: content.trim() };
+            
+            // LLAMADA CLAVE: PUT /api/content/:section
             await API.put(`/content/${endpointSection}`, payload, config);
 
             setIsEditing(false);
             alert("Contenido actualizado con éxito.");
             
-            // Llamar al callback para que la página superior pueda refrescar datos si es necesario
             if (onUpdate) {
                 onUpdate();
             }
 
         } catch (error) {
             console.error("Error al guardar contenido:", error);
-            alert("Fallo al guardar el contenido. Verifique el servidor.");
+            const errorMessage = error.response?.data?.message || "Fallo al guardar el contenido. Verifique el servidor.";
+            alert(errorMessage);
             // Revertir el estado si falla la actualización
             setContent(initialContent); 
 
@@ -71,11 +89,12 @@ const EditableField = ({ initialContent, section, subsection, onUpdate }) => {
     return (
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
             <h3 className="text-lg font-semibold text-prolinco-dark mb-2">
-                {subsection}
+                {/* 🛑 Ojo: 'subsection' aquí es solo para el título, no afecta el guardado. */}
+                {title || subsection}
             </h3>
             
-            {/* Botón de Edición/Guardar (Solo para Admins) */}
-            {isAdmin && (
+            {/* Botón de Edición/Guardar (Solo si canEdit) */}
+            {canEdit && ( 
                 <div className="absolute top-3 right-3">
                     {isEditing ? (
                         <button
@@ -99,8 +118,8 @@ const EditableField = ({ initialContent, section, subsection, onUpdate }) => {
             )}
 
             {/* Contenido (Editable o Solo Lectura) */}
-            <div className="mt-4 pr-10"> {/* pr-10 para dejar espacio al botón */}
-                {isEditing && isAdmin ? (
+            <div className="mt-4 pr-10">
+                {isEditing && canEdit ? (
                     <textarea
                         value={content}
                         onChange={(e) => setContent(e.target.value)}

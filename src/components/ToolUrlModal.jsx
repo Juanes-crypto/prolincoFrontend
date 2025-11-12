@@ -1,4 +1,5 @@
-// components/ToolUrlModal.jsx - VERSIÓN COMPLETA Y CORREGIDA
+// components/ToolUrlModal.jsx - VERSIÓN CON JSX CORREGIDO
+
 import React, { useState } from 'react';
 import { XMarkIcon, LinkIcon } from '@heroicons/react/24/outline';
 import { API } from '../api/api';
@@ -12,8 +13,17 @@ const ToolUrlModal = ({ tool, section, onComplete, onClose }) => {
         e.preventDefault();
         e.stopPropagation();
         
-        if (!url.trim()) {
+        const urlToSave = url.trim();
+
+        if (!urlToSave) {
             setError('La URL no puede estar vacía');
+            return;
+        }
+
+        // 🌟 CORRECCIÓN 2 (Evita Error 500): Validar formato de URL antes de enviar
+        if (!urlToSave.startsWith('http://') && !urlToSave.startsWith('https://')) {
+            setError('URL inválida. Debe comenzar con http:// o https://');
+            setLoading(false); // Detener el guardado si la URL es inválida
             return;
         }
 
@@ -21,21 +31,35 @@ const ToolUrlModal = ({ tool, section, onComplete, onClose }) => {
         setError('');
 
         try {
-            // Usar el endpoint correcto para herramientas según el backend
-            await API.put(`/content/${section}/tool/${tool.key}`, { url: url.trim() });
+            // 1. Normalizar la sección
+            const sectionMap = { 
+                'servicio al cliente': 'servicio', 
+                'talento humano': 'talento', 
+                'administracion': 'admin' 
+            };
+            const sectionKey = section.toLowerCase();
+            const endpointSection = sectionMap[sectionKey] || sectionKey.replace(' ', '');
+
+            // 🌟 CORRECCIÓN 1 (Evita Error 404): Normalizar igual que el backend (lowercase + sin espacios)
+            const toolNameParam = tool.name.toLowerCase().replace(/\s/g, '');
             
-            // Éxito - cerramos modal y refrescamos datos
+            // 3. Usar los endpoints corregidos
+            await API.put(`/content/${endpointSection}/tool/${toolNameParam}`, { url: urlToSave });
+            
+            // Éxito
             onComplete();
             onClose();
             
         } catch (err) {
             console.error('Error updating tool URL:', err);
-            setError('Error al actualizar la URL. Por favor, intenta nuevamente.');
+            const errorMessage = err.response?.data?.message || 'Error al actualizar la URL. Por favor, intenta nuevamente.';
+            alert(errorMessage); 
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
     };
-
+    
     const handleOverlayClick = (e) => {
         if (e.target === e.currentTarget) {
             onClose();
@@ -64,7 +88,7 @@ const ToolUrlModal = ({ tool, section, onComplete, onClose }) => {
                             </h3>
                             <p className="text-sm text-gray-500">
                                 {tool?.name}
-                            </p>
+                            </p> {/* ✅ CORREGIDO: Cerrar etiqueta <p> */}
                         </div>
                     </div>
                     <button

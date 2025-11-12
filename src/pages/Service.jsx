@@ -195,7 +195,11 @@ const Service = () => {
             <EditModal
                 type="url"
                 section="servicio"
-                editingData={{...editingUrl, field: editingUrl.toolKey}}
+                editingData={{
+                    ...editingUrl,
+                    field: editingUrl.toolKey,
+                    toolName: editingUrl.toolName
+                }}
                 onComplete={handleContentUpdate}
                 onClose={closeModal}
             />

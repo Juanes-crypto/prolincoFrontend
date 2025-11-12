@@ -46,7 +46,43 @@ const useOperationalData = () => {
                 transformedData[section] = response.data;
             });
 
-            setData(transformedData);
+            // Aplanar la data para compatibilidad con páginas existentes
+            const flattenedData = {
+                // Combinar campos de identidad organizacional
+                mission: transformedData.organizacional?.mission || '',
+                vision: transformedData.organizacional?.vision || '',
+                corporateValues: transformedData.organizacional?.corporateValues || [],
+
+                // Campos de servicio (para ClientePage)
+                diagnostic: transformedData.servicio?.diagnostic || '',
+                specificObjective: transformedData.servicio?.specificObjective || '',
+
+                // Mantener URLs de herramientas por sección para compatibilidad
+                ...transformedData.servicio?.tools?.reduce((acc, tool) => {
+                    acc[tool.name] = tool.url;
+                    return acc;
+                }, {}),
+                ...transformedData.talento?.tools?.reduce((acc, tool) => {
+                    acc[tool.name] = tool.url;
+                    return acc;
+                }, {}),
+                ...transformedData.admin?.tools?.reduce((acc, tool) => {
+                    acc[tool.name] = tool.url;
+                    return acc;
+                }, {}),
+                ...transformedData.organizacional?.tools?.reduce((acc, tool) => {
+                    acc[tool.name] = tool.url;
+                    return acc;
+                }, {}),
+
+                // Mantener referencias a secciones completas para casos especiales
+                servicio: transformedData.servicio,
+                talento: transformedData.talento,
+                admin: transformedData.admin,
+                organizacional: transformedData.organizacional
+            };
+
+            setData(flattenedData);
         } catch (err) {
             console.error("Error al cargar datos operacionales:", err);
             setError("Fallo al cargar los datos. Verifique el backend.");

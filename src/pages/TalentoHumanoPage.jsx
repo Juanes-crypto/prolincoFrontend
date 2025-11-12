@@ -38,11 +38,37 @@ const CATEGORIES_CONFIG = {
     'Desarrollo': { icon: AcademicCapIcon, color: 'border-teal-200 bg-teal-50', accent: 'text-teal-700' }
 };
 
-const mapToolsWithData = (tools, data) => tools.map(tool => ({
-    ...tool,
-    url: data[tool.key] || '#',
-    isConfigured: !!(data[tool.key] && data[tool.key] !== '#')
-}));
+// CORREGIR la función mapToolsWithData en TalentoHumanoPage.jsx
+// CORREGIR COMPLETAMENTE la función mapToolsWithData
+const mapToolsWithData = (tools, data) => {
+    console.log('🔄 Mapeando herramientas con datos:', data);
+    
+    return tools.map(tool => {
+        if (!data || !data.tools) {
+            return {
+                ...tool,
+                url: '#',
+                isConfigured: false
+            };
+        }
+
+        // 🌟 CORRECCIÓN CRÍTICA: Buscar la herramienta de forma más robusta
+        const backendTool = data.tools.find(backendTool => {
+            const backendName = backendTool.name.toLowerCase().replace(/\s/g, '');
+            const toolName = tool.name.toLowerCase().replace(/\s/g, '');
+            console.log(`🔍 Comparando: "${backendName}" vs "${toolName}"`);
+            return backendName === toolName;
+        });
+
+        console.log(`📊 Herramienta "${tool.name}" encontrada:`, backendTool);
+        
+        return {
+            ...tool,
+            url: backendTool ? backendTool.url || '#' : '#',
+            isConfigured: backendTool && backendTool.url && backendTool.url !== '' && backendTool.url !== '#'
+        };
+    });
+};
 
 const TalentoHumanoPage = ({ data = {}, refetch }) => {
     const { user } = useAuth();
@@ -50,18 +76,26 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
 
     const diagnostic = data.diagnostic || '';
     const specificObjective = data.specificObjective || '';
-    
+
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '' });
     const [talentTools, setTalentTools] = useState([]);
 
     // ✨ CORRECCIÓN 1: Usar JSON.stringify para una comparación de dependencia estable
-    useEffect(() => {
-        if (data && Object.keys(data).length > 0) {
-            setTalentTools(mapToolsWithData(TOOL_STRUCTURE, data));
-        } else {
-            setTalentTools(mapToolsWithData(TOOL_STRUCTURE, {}));
-        }
-    }, [JSON.stringify(data)]);
+    // En TalentoHumanoPage.jsx - después del fetch
+    // En TalentoHumanoPage.jsx - mejorar el useEffect
+useEffect(() => {
+    console.log('🎯 useEffect ejecutado con data:', data);
+    
+    if (data && Object.keys(data).length > 0) {
+        console.log('📊 Tools del backend:', data.tools);
+        const mappedTools = mapToolsWithData(TOOL_STRUCTURE, data);
+        console.log('🔄 Herramientas mapeadas:', mappedTools);
+        setTalentTools(mappedTools);
+    } else {
+        console.log('📭 No hay datos, usando valores por defecto');
+        setTalentTools(mapToolsWithData(TOOL_STRUCTURE, {}));
+    }
+}, [JSON.stringify(data)]);
 
     const toolsByCategory = talentTools.reduce((acc, tool) => {
         const category = tool.category;
@@ -75,16 +109,42 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
     };
 
     const handleUrlUpdate = (updatedData) => {
-        if (updatedData && typeof updatedData === 'object') {
-            const key = Object.keys(updatedData)[0];
-            const newUrl = updatedData[key];
-            setTalentTools(prev =>
-                prev.map(t => (t.key === key ? { ...t, url: newUrl, isConfigured: !!newUrl && newUrl !== '#' } : t))
-            );
+    console.log('🔄 handleUrlUpdate recibió:', updatedData);
+    
+    if (updatedData && updatedData.url) {
+        const { toolName, toolKey, url } = updatedData;
+        const newUrl = url;
+        
+        // 🌟 CORRECCIÓN: Usar toolName para encontrar la herramienta
+        setTalentTools(prev =>
+            prev.map(t => {
+                const toolMatches = 
+                    t.key === toolKey || 
+                    t.name === toolName ||
+                    t.name.toLowerCase().replace(/\s/g, '') === (toolName || '').toLowerCase().replace(/\s/g, '');
+                
+                if (toolMatches) {
+                    console.log(`🔄 Actualizando herramienta: ${t.name} con URL: ${newUrl}`);
+                    return { 
+                        ...t, 
+                        url: newUrl, 
+                        isConfigured: !!newUrl && newUrl !== '' && newUrl !== '#' 
+                    };
+                }
+                return t;
+            })
+        );
+    }
+    
+    setEditingUrl({ toolName: null, toolKey: null, url: '' });
+    
+    setTimeout(() => {
+        if (refetch) {
+            console.log('🔄 Forzando recarga de datos...');
+            refetch();
         }
-        setEditingUrl({ toolName: null, toolKey: null, url: '' });
-        if (refetch) refetch();
-    };
+    }, 500);
+};
 
     const closeModal = () => {
         setEditingUrl({ toolName: null, toolKey: null, url: '' });
@@ -127,7 +187,7 @@ const TalentoHumanoPage = ({ data = {}, refetch }) => {
                             )}
                         </a>
                         {isAdmin && (
-                            <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); startUrlEdit(tool.name, tool.key, tool.url); }} className="w-full inline-flex items-center justify-center px-4 py-3 text-sm text-gray-600 hover:text-prolinco-primary font-semibold bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary border-2 border-transparent hover:border-prolinco-primary/30 hover:shadow-lg hover:scale-[1.02]">
+                            <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); startUrlEdit(tool.name, tool.key, tool.url); }} className="w-full inline-flex items-center justify-center px-4 py-3 text-sm text-gray-600 hover:text-prolinco-primary font-semibold bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary border-2 border-transparent hover:border-prolinco-primary/30 hover:shadow-lg hover:scale-[1.02] cursor-pointer">
                                 <PencilIcon className="h-4 w-4 mr-3 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
                                 <span>{tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}</span>
                             </button>
