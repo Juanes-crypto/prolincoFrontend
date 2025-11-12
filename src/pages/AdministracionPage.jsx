@@ -1,6 +1,6 @@
 // frontend/src/pages/AdministracionPage.jsx (VERSIÓN REDISEÑADA - INNOVADORA)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import {
     BuildingLibraryIcon, LinkIcon, ChartBarIcon, DocumentTextIcon, PencilIcon,
@@ -8,6 +8,7 @@ import {
     ScaleIcon, CubeIcon, ChartPieIcon, ViewfinderCircleIcon, LightBulbIcon, ShieldCheckIcon
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
+import useOperationalData from '../hooks/useOperationalData';
 import EditableField from '../components/EditableField';
 // Es posible que uses EditModal aquí también, si es el modal genérico.
 // Si ToolUrlModal es específico y funciona, lo mantenemos.
@@ -82,22 +83,27 @@ const IMPORTANCE_CONFIG = {
     'medium': { label: 'Media', color: 'from-blue-500 to-cyan-500', badge: 'bg-blue-100 text-blue-700' }
 };
 
-const AdministracionPage = ({ data = {}, refetch }) => {
+
+const AdministracionPage = () => {
+    // 🌟 Usar hook directamente
+    const { data, loading, error, refetch } = useOperationalData();
+
     const { user } = useAuth();
     const isAdmin = user && user.role === 'admin';
 
-    // Extraer datos
-    const diagnostic = data.diagnostic || '';
-    const specificObjective = data.specificObjective || '';
-    const mission = data.mission || '';
-    const vision = data.vision || '';
-    const corporateValues = Array.isArray(data.corporateValues) ? data.corporateValues.join(', ') : '';
+    // Extraer datos específicos de admin
+    const adminData = useMemo(() => data?.admin || {}, [data]);
+    const diagnostic = adminData.diagnostic || '';
+    const specificObjective = adminData.specificObjective || '';
+    const mission = adminData.mission || '';
+    const vision = adminData.vision || '';
+    const corporateValues = Array.isArray(data?.organizacional?.corporateValues) ? data.organizacional.corporateValues.join(', ') : '';
 
     // 🆕 ESTADO SIMPLIFICADO COMO SERVICE.JSX
-    const [editingUrl, setEditingUrl] = useState({
-        toolName: null,
-        toolKey: null,
-        url: ''
+    const [editingUrl, setEditingUrl] = useState({ 
+        toolName: null, 
+        toolKey: null, 
+        url: '' 
     });
     const [adminTools, setAdminTools] = useState([]);
 
@@ -111,51 +117,54 @@ const AdministracionPage = ({ data = {}, refetch }) => {
         return acc;
     }, {});
 
-    // Sincronizar herramientas con datos del backend
-    // En AdministracionPage.jsx - CORREGIR el useEffect que mapea herramientas
-    // En AdministracionPage.jsx - corregir el mapeo
-useEffect(() => {
-    console.log('🎯 Administracion - useEffect con data:', data);
-    
-    if (data && Object.keys(data).length > 0) {
-        console.log('📊 Administracion - Tools del backend:', data.tools);
-        
-        const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => {
-            if (!data.tools) {
-                return {
+        // Sincronizar herramientas con datos del backend
+        const adminDataJson = JSON.stringify(adminData || {});
+
+        useEffect(() => {
+            console.log('🎯 Administracion - useEffect con adminData:', adminData);
+
+            if (adminData && Object.keys(adminData).length > 0) {
+                console.log('📊 Administracion - Tools del backend (admin):', adminData.tools);
+
+                const mappedTools = ADMIN_TOOLS_STRUCTURE.map(tool => {
+                    if (!adminData.tools) {
+                        return {
+                            ...tool,
+                            url: '#',
+                            isConfigured: false
+                        };
+                    }
+
+                    const backendTool = adminData.tools.find(backendTool => {
+                        const backendName = backendTool.name.toLowerCase().replace(/\s/g, '');
+                        const toolName = tool.name.toLowerCase().replace(/\s/g, '');
+                        console.log(`🔍 Administracion - Comparando: "${backendName}" vs "${toolName}"`);
+                        return backendName === toolName;
+                    });
+
+                    console.log(`📊 Administracion - Herramienta "${tool.name}" encontrada:`, backendTool);
+
+                    return {
+                        ...tool,
+                        url: backendTool ? backendTool.url || '#' : '#',
+                        isConfigured: backendTool && backendTool.url && backendTool.url !== '' && backendTool.url !== '#'
+                    };
+                });
+
+                console.log('🔄 Administracion - Herramientas mapeadas:', mappedTools);
+                setAdminTools(mappedTools);
+            } else {
+                console.log('📭 Administracion - No hay datos, usando valores por defecto');
+                setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({
                     ...tool,
                     url: '#',
                     isConfigured: false
-                };
+                })));
             }
+        }, [adminDataJson, adminData]);
 
-            const backendTool = data.tools.find(backendTool => {
-                const backendName = backendTool.name.toLowerCase().replace(/\s/g, '');
-                const toolName = tool.name.toLowerCase().replace(/\s/g, '');
-                console.log(`🔍 Administracion - Comparando: "${backendName}" vs "${toolName}"`);
-                return backendName === toolName;
-            });
-
-            console.log(`📊 Administracion - Herramienta "${tool.name}" encontrada:`, backendTool);
-            
-            return {
-                ...tool,
-                url: backendTool ? backendTool.url || '#' : '#',
-                isConfigured: backendTool && backendTool.url && backendTool.url !== '' && backendTool.url !== '#'
-            };
-        });
-        
-        console.log('🔄 Administracion - Herramientas mapeadas:', mappedTools);
-        setAdminTools(mappedTools);
-    } else {
-        console.log('📭 Administracion - No hay datos, usando valores por defecto');
-        setAdminTools(ADMIN_TOOLS_STRUCTURE.map(tool => ({
-            ...tool,
-            url: '#',
-            isConfigured: false
-        })));
-    }
-}, [JSON.stringify(data)]);
+        if (loading) return <div className="text-center p-10">Cargando Administración...</div>;
+        if (error) return <div className="text-red-600 text-center p-10">Error: {error}</div>;
 
     // 🆕 FUNCIONES DIRECTAS COMO SERVICE.JSX
     const startUrlEdit = (toolName, toolKey, currentUrl) => {

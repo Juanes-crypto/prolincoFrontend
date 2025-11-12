@@ -1,6 +1,6 @@
 // frontend/src/pages/TalentoHumanoPage.jsx (VERSIÓN REDISEÑADA - INNOVADORA)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import {
     UsersIcon,
@@ -18,6 +18,7 @@ import {
     ExclamationCircleIcon
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
+import useOperationalData from '../hooks/useOperationalData';
 import EditableField from '../components/EditableField';
 import EditModal from '../components/EditModal';
 
@@ -70,32 +71,40 @@ const mapToolsWithData = (tools, data) => {
     });
 };
 
-const TalentoHumanoPage = ({ data = {}, refetch }) => {
+const TalentoHumanoPage = () => {
+    // 🌟 NUEVO: Usar hook directamente
+    const { data, loading, error, refetch } = useOperationalData();
+
     const { user } = useAuth();
     const isAdmin = user && user.role === 'admin';
 
-    const diagnostic = data.diagnostic || '';
-    const specificObjective = data.specificObjective || '';
+    // Extraer datos específicos de talento
+    const talentData = useMemo(() => data?.talento || {}, [data]);
+    const diagnostic = talentData.diagnostic || '';
+    const specificObjective = talentData.specificObjective || '';
 
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '' });
     const [talentTools, setTalentTools] = useState([]);
 
-    // ✨ CORRECCIÓN 1: Usar JSON.stringify para una comparación de dependencia estable
-    // En TalentoHumanoPage.jsx - después del fetch
-    // En TalentoHumanoPage.jsx - mejorar el useEffect
-useEffect(() => {
-    console.log('🎯 useEffect ejecutado con data:', data);
-    
-    if (data && Object.keys(data).length > 0) {
-        console.log('📊 Tools del backend:', data.tools);
-        const mappedTools = mapToolsWithData(TOOL_STRUCTURE, data);
-        console.log('🔄 Herramientas mapeadas:', mappedTools);
-        setTalentTools(mappedTools);
-    } else {
-        console.log('📭 No hay datos, usando valores por defecto');
-        setTalentTools(mapToolsWithData(TOOL_STRUCTURE, {}));
-    }
-}, [JSON.stringify(data)]);
+    const talentDataJson = JSON.stringify(talentData || {});
+
+    // useEffect para mapear herramientas...
+    useEffect(() => {
+        console.log('🎯 useEffect ejecutado con talentData:', talentData);
+
+        if (talentData && talentData.tools) {
+            console.log('📊 Tools del backend (talento):', talentData.tools);
+            const mappedTools = mapToolsWithData(TOOL_STRUCTURE, talentData);
+            console.log('🔄 Herramientas mapeadas:', mappedTools);
+            setTalentTools(mappedTools);
+        } else {
+            console.log('📭 No hay datos de talento, usando valores por defecto');
+            setTalentTools(mapToolsWithData(TOOL_STRUCTURE, {}));
+        }
+    }, [talentDataJson, talentData]);
+
+    if (loading) return <div className="text-center p-10">Cargando Talento Humano...</div>;
+    if (error) return <div className="text-red-600 text-center p-10">Error: {error}</div>;
 
     const toolsByCategory = talentTools.reduce((acc, tool) => {
         const category = tool.category;

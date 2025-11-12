@@ -1,6 +1,6 @@
 // frontend/src/pages/ClientePage.jsx (VERSIÓN ARQUITECTÓNICA PREMIUM)
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Card from "../components/Card";
 import {
   TruckIcon,
@@ -18,6 +18,7 @@ import {
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/solid";
 import { useAuth } from "../context/AuthProvider";
+import useOperationalData from '../hooks/useOperationalData';
 import EditableField from "../components/EditableField";
 import ToolUrlModal from "../components/ToolUrlModal";
 
@@ -149,12 +150,17 @@ const mapUrlsToTools = (tools, urls) =>
     url: urls[tool.key] || "#",
   }));
 
-const ClientePage = ({ data = {}, refetch }) => {
+const ClientePage = () => {
+  // Usar hook directamente
+  const { data, loading, error, refetch } = useOperationalData();
+
   const { user } = useAuth();
   const isAdmin = user && user.role === 'admin';
 
-  const diagnostic = data.diagnostic || "";
-  const specificObjective = data.specificObjective || "";
+  const serviceData = useMemo(() => data?.servicio || {}, [data]);
+
+  const diagnostic = serviceData.diagnostic || "";
+  const specificObjective = serviceData.specificObjective || "";
 
   const [editingTool, setEditingTool] = useState(null);
   const [serviceTools, setServiceTools] = useState({
@@ -163,16 +169,20 @@ const ClientePage = ({ data = {}, refetch }) => {
     postventa: [],
   });
 
+  const serviceDataJson = JSON.stringify(serviceData || {});
+
   // Sincronizar herramientas con datos
   useEffect(() => {
-    if (data && Object.keys(data).length > 0) {
+    if (serviceData && Object.keys(serviceData).length > 0) {
       setServiceTools({
-        preventa: mapUrlsToTools(TOOLS_STRUCTURE.preventa, data),
-        venta: mapUrlsToTools(TOOLS_STRUCTURE.venta, data),
-        postventa: mapUrlsToTools(TOOLS_STRUCTURE.postventa, data),
+        preventa: mapUrlsToTools(TOOLS_STRUCTURE.preventa, serviceData),
+        venta: mapUrlsToTools(TOOLS_STRUCTURE.venta, serviceData),
+        postventa: mapUrlsToTools(TOOLS_STRUCTURE.postventa, serviceData),
       });
     }
-  }, [data]);
+  }, [serviceDataJson, serviceData]);
+
+  
 
   const startToolUrlEdit = useCallback((tool) => {
     setEditingTool(tool);
@@ -287,6 +297,9 @@ const ClientePage = ({ data = {}, refetch }) => {
       </section>
     );
   };
+
+  if (loading) return <div className="text-center p-8">Cargando Cliente...</div>;
+  if (error) return <div className="text-red-600 text-center p-8">Error: {error}</div>;
 
   return (
     <div className="animate-fadeIn relative">
