@@ -1,4 +1,4 @@
-// frontend/src/pages/TalentoHumanoPage.jsx (VERSIÓN REDISEÑADA - INNOVADORA)
+// frontend/src/pages/TalentoHumanoPage.jsx (VERSIÓN COMPLETA Y CORREGIDA)
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
@@ -19,7 +19,6 @@ import {
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
 import useOperationalData from '../hooks/useOperationalData';
-import EditableField from '../components/EditableField';
 import EditModal from '../components/EditModal';
 
 const TOOL_STRUCTURE = [
@@ -39,8 +38,7 @@ const CATEGORIES_CONFIG = {
     'Desarrollo': { icon: AcademicCapIcon, color: 'border-teal-200 bg-teal-50', accent: 'text-teal-700' }
 };
 
-// CORREGIR la función mapToolsWithData en TalentoHumanoPage.jsx
-// CORREGIR COMPLETAMENTE la función mapToolsWithData
+// Función para mapear herramientas con datos del backend
 const mapToolsWithData = (tools, data) => {
     console.log('🔄 Mapeando herramientas con datos:', data);
     
@@ -53,7 +51,7 @@ const mapToolsWithData = (tools, data) => {
             };
         }
 
-        // 🌟 CORRECCIÓN CRÍTICA: Buscar la herramienta de forma más robusta
+        // Buscar la herramienta de forma robusta
         const backendTool = data.tools.find(backendTool => {
             const backendName = backendTool.name.toLowerCase().replace(/\s/g, '');
             const toolName = tool.name.toLowerCase().replace(/\s/g, '');
@@ -72,23 +70,38 @@ const mapToolsWithData = (tools, data) => {
 };
 
 const TalentoHumanoPage = () => {
-    // 🌟 NUEVO: Usar hook directamente
+    // Usar hook directamente
     const { data, loading, error, refetch } = useOperationalData();
-
     const { user } = useAuth();
     const isAdmin = user && user.role === 'admin';
+    const isTalentUser = user && user.role === 'talento';
 
     // Extraer datos específicos de talento
     const talentData = useMemo(() => data?.talento || {}, [data]);
-    const diagnostic = talentData.diagnostic || '';
-    const specificObjective = talentData.specificObjective || '';
-
+    
+    // 🆕 ESTADOS PARA CONTENIDO Y EDICIÓN
+    const [content, setContent] = useState({
+        diagnostic: '',
+        specificObjective: ''
+    });
+    
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '' });
+    const [editingText, setEditingText] = useState({ field: null, value: '' });
     const [talentTools, setTalentTools] = useState([]);
 
     const talentDataJson = JSON.stringify(talentData || {});
 
-    // useEffect para mapear herramientas...
+    // Sincronizar contenido cuando cambian los datos
+    useEffect(() => {
+        if (talentData) {
+            setContent({
+                diagnostic: talentData.diagnostic || '',
+                specificObjective: talentData.specificObjective || ''
+            });
+        }
+    }, [talentData]);
+
+    // Mapear herramientas
     useEffect(() => {
         console.log('🎯 useEffect ejecutado con talentData:', talentData);
 
@@ -103,6 +116,82 @@ const TalentoHumanoPage = () => {
         }
     }, [talentDataJson, talentData]);
 
+    // 🆕 FUNCIONES PARA EDICIÓN DE TEXTOS
+    const startTextEdit = (field, initialValue) => {
+        setEditingText({ field, value: initialValue });
+        setEditingUrl({ toolName: null });
+    };
+
+    const handleContentUpdate = (updatedPayload) => {
+        console.log('📝 handleContentUpdate recibió:', updatedPayload);
+        
+        if (updatedPayload && typeof updatedPayload === 'object') {
+            const key = Object.keys(updatedPayload)[0];
+            const newValue = Object.values(updatedPayload)[0];
+            
+            // Actualizar estado local inmediatamente
+            setContent(prev => ({ ...prev, [key]: newValue }));
+        }
+
+        // Cerrar modal
+        setEditingText({ field: null, value: '' });
+        
+        // Recargar datos
+        setTimeout(() => {
+            if (refetch) {
+                refetch();
+            }
+        }, 500);
+    };
+
+    // 🆕 FUNCIONES PARA EDICIÓN DE URLs
+    const startUrlEdit = (toolName, toolKey, currentUrl) => {
+        setEditingUrl({ toolName, toolKey, url: currentUrl || '' });
+    };
+
+    const handleUrlUpdate = (updatedData) => {
+        console.log('🔄 handleUrlUpdate recibió:', updatedData);
+        
+        if (updatedData && updatedData.url) {
+            const { toolName, toolKey, url } = updatedData;
+            const newUrl = url;
+            
+            // Actualizar estado de herramientas
+            setTalentTools(prev =>
+                prev.map(t => {
+                    const toolMatches = 
+                        t.key === toolKey || 
+                        t.name === toolName ||
+                        t.name.toLowerCase().replace(/\s/g, '') === (toolName || '').toLowerCase().replace(/\s/g, '');
+                    
+                    if (toolMatches) {
+                        console.log(`🔄 Actualizando herramienta: ${t.name} con URL: ${newUrl}`);
+                        return { 
+                            ...t, 
+                            url: newUrl, 
+                            isConfigured: !!newUrl && newUrl !== '' && newUrl !== '#' 
+                        };
+                    }
+                    return t;
+                })
+            );
+        }
+        
+        setEditingUrl({ toolName: null, toolKey: null, url: '' });
+        
+        setTimeout(() => {
+            if (refetch) {
+                console.log('🔄 Forzando recarga de datos...');
+                refetch();
+            }
+        }, 500);
+    };
+
+    const closeModal = () => {
+        setEditingUrl({ toolName: null, toolKey: null, url: '' });
+        setEditingText({ field: null, value: '' });
+    };
+
     if (loading) return <div className="text-center p-10">Cargando Talento Humano...</div>;
     if (error) return <div className="text-red-600 text-center p-10">Error: {error}</div>;
 
@@ -112,52 +201,6 @@ const TalentoHumanoPage = () => {
         acc[category].push(tool);
         return acc;
     }, {});
-
-    const startUrlEdit = (toolName, toolKey, currentUrl) => {
-        setEditingUrl({ toolName, toolKey, url: currentUrl || '' });
-    };
-
-    const handleUrlUpdate = (updatedData) => {
-    console.log('🔄 handleUrlUpdate recibió:', updatedData);
-    
-    if (updatedData && updatedData.url) {
-        const { toolName, toolKey, url } = updatedData;
-        const newUrl = url;
-        
-        // 🌟 CORRECCIÓN: Usar toolName para encontrar la herramienta
-        setTalentTools(prev =>
-            prev.map(t => {
-                const toolMatches = 
-                    t.key === toolKey || 
-                    t.name === toolName ||
-                    t.name.toLowerCase().replace(/\s/g, '') === (toolName || '').toLowerCase().replace(/\s/g, '');
-                
-                if (toolMatches) {
-                    console.log(`🔄 Actualizando herramienta: ${t.name} con URL: ${newUrl}`);
-                    return { 
-                        ...t, 
-                        url: newUrl, 
-                        isConfigured: !!newUrl && newUrl !== '' && newUrl !== '#' 
-                    };
-                }
-                return t;
-            })
-        );
-    }
-    
-    setEditingUrl({ toolName: null, toolKey: null, url: '' });
-    
-    setTimeout(() => {
-        if (refetch) {
-            console.log('🔄 Forzando recarga de datos...');
-            refetch();
-        }
-    }, 500);
-};
-
-    const closeModal = () => {
-        setEditingUrl({ toolName: null, toolKey: null, url: '' });
-    };
 
     const renderToolCard = (tool) => {
         const CategoryIcon = CATEGORIES_CONFIG[tool.category]?.icon || DocumentTextIcon;
@@ -180,11 +223,31 @@ const TalentoHumanoPage = () => {
                     </div>
                     <div className="mb-4">
                         <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${tool.isConfigured ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-700 border border-yellow-200'}`}>
-                            {tool.isConfigured ? (<><CheckCircleIcon className="h-3 w-3" /><span>URL Configurada</span></>) : (<><ExclamationCircleIcon className="h-3 w-3" /><span>URL Pendiente</span></>)}
+                            {tool.isConfigured ? (
+                                <>
+                                    <CheckCircleIcon className="h-3 w-3" />
+                                    <span>URL Configurada</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ExclamationCircleIcon className="h-3 w-3" />
+                                    <span>URL Pendiente</span>
+                                </>
+                            )}
                         </div>
                     </div>
                     <div className="mt-auto space-y-3">
-                        <a href={tool.isConfigured ? tool.url : '#'} target="_blank" rel="noopener noreferrer" className={`w-full inline-flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border-2 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary ${tool.isConfigured ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-2xl hover:scale-[1.03] hover:-translate-y-1' : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'}`} onClick={!tool.isConfigured ? (e) => e.preventDefault() : undefined}>
+                        <a 
+                            href={tool.isConfigured ? tool.url : '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className={`w-full inline-flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border-2 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary ${
+                                tool.isConfigured 
+                                    ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-2xl hover:scale-[1.03] hover:-translate-y-1' 
+                                    : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                            }`} 
+                            onClick={!tool.isConfigured ? (e) => e.preventDefault() : undefined}
+                        >
                             <div className="flex items-center space-x-3">
                                 <div className={`p-1.5 rounded-lg ${tool.isConfigured ? 'bg-white/20' : 'bg-gray-200'}`}>
                                     <LinkIcon className="h-4 w-4" />
@@ -196,7 +259,14 @@ const TalentoHumanoPage = () => {
                             )}
                         </a>
                         {isAdmin && (
-                            <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); startUrlEdit(tool.name, tool.key, tool.url); }} className="w-full inline-flex items-center justify-center px-4 py-3 text-sm text-gray-600 hover:text-prolinco-primary font-semibold bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary border-2 border-transparent hover:border-prolinco-primary/30 hover:shadow-lg hover:scale-[1.02] cursor-pointer">
+                            <button 
+                                onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    e.preventDefault(); 
+                                    startUrlEdit(tool.name, tool.key, tool.url); 
+                                }} 
+                                className="w-full inline-flex items-center justify-center px-4 py-3 text-sm text-gray-600 hover:text-prolinco-primary font-semibold bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary border-2 border-transparent hover:border-prolinco-primary/30 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+                            >
                                 <PencilIcon className="h-4 w-4 mr-3 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
                                 <span>{tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}</span>
                             </button>
@@ -214,19 +284,27 @@ const TalentoHumanoPage = () => {
             <section key={category} className="mb-10">
                 <div className={`rounded-2xl border-2 ${categoryConfig.color} p-6 mb-6`}>
                     <div className="flex items-center space-x-4">
-                        <div className={`p-3 rounded-xl ${categoryConfig.accent} bg-white shadow-sm`}><CategoryIcon className="h-6 w-6" /></div>
+                        <div className={`p-3 rounded-xl ${categoryConfig.accent} bg-white shadow-sm`}>
+                            <CategoryIcon className="h-6 w-6" />
+                        </div>
                         <div className="flex-1">
                             <h3 className="text-2xl font-black text-gray-800">{category}</h3>
                             <p className="text-gray-600">{tools.length} herramienta{tools.length !== 1 ? 's' : ''} de {category.toLowerCase()}</p>
                         </div>
                         <div className="text-right">
-                            <div className={`text-lg font-bold ${categoryConfig.accent}`}>{tools.filter(t => t.isConfigured).length}/{tools.length}</div>
+                            <div className={`text-lg font-bold ${categoryConfig.accent}`}>
+                                {tools.filter(t => t.isConfigured).length}/{tools.length}
+                            </div>
                             <div className="text-sm text-gray-500">Configuradas</div>
                         </div>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tools.map((tool, index) => (<div key={`${tool.key}-${index}-${category}`}>{renderToolCard(tool)}</div>))}
+                    {tools.map((tool, index) => (
+                        <div key={`${tool.key}-${index}-${category}`}>
+                            {renderToolCard(tool)}
+                        </div>
+                    ))}
                 </div>
             </section>
         );
@@ -255,6 +333,15 @@ const TalentoHumanoPage = () => {
                     <div className="w-1 h-1 bg-gray-400/30 rounded-full"></div>
                 </div>
             </div>
+
+            {/* 🆕 MODALES PARA EDICIÓN */}
+            <EditModal
+                type="text"
+                section="talento"
+                editingData={editingText}
+                onComplete={handleContentUpdate}
+                onClose={() => setEditingText({ field: null, value: '' })}
+            />
 
             <EditModal
                 type="url"
@@ -323,13 +410,20 @@ const TalentoHumanoPage = () => {
                                 <div className="w-3 h-12 bg-prolinco-primary rounded-full"></div>
                                 <h3 className="text-2xl font-bold text-prolinco-dark">Diagnóstico Actual</h3>
                             </div>
-                            <EditableField
-                                initialContent={diagnostic}
-                                section="talento"
-                                subsection="diagnostico"
-                                onUpdate={refetch}
-                                placeholder="Describe el diagnóstico actual del área de talento humano..."
-                            />
+                            <div className="text-lg leading-relaxed text-gray-700">
+                                <p className="whitespace-pre-line">
+                                    {content.diagnostic || 'Aún no se ha definido el diagnóstico del área de talento humano.'}
+                                </p>
+                            </div>
+                            {(isAdmin || isTalentUser) && (
+                                <button
+                                    onClick={() => startTextEdit('diagnostic', content.diagnostic || '')}
+                                    className="mt-6 inline-flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-primary font-semibold rounded-xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary/20"
+                                >
+                                    <PencilIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                    <span>Editar Diagnóstico</span>
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -343,13 +437,20 @@ const TalentoHumanoPage = () => {
                                 <div className="w-3 h-12 bg-prolinco-secondary rounded-full"></div>
                                 <h3 className="text-2xl font-bold text-prolinco-dark">Objetivo Específico</h3>
                             </div>
-                            <EditableField
-                                initialContent={specificObjective}
-                                section="talento"
-                                subsection="Objetivos Específicos"
-                                onUpdate={refetch}
-                                placeholder="Define los objetivos específicos para el desarrollo del talento humano..."
-                            />
+                            <div className="text-lg leading-relaxed text-gray-700">
+                                <p className="whitespace-pre-line">
+                                    {content.specificObjective || 'Aún no se ha definido el objetivo específico para talento humano.'}
+                                </p>
+                            </div>
+                            {(isAdmin || isTalentUser) && (
+                                <button
+                                    onClick={() => startTextEdit('specificObjective', content.specificObjective || '')}
+                                    className="mt-6 inline-flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-secondary font-semibold rounded-xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-secondary/20"
+                                >
+                                    <PencilIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                    <span>Editar Objetivo</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

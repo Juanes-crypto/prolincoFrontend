@@ -1,4 +1,4 @@
-// frontend/src/pages/ClientePage.jsx (VERSIÓN ARQUITECTÓNICA PREMIUM)
+// frontend/src/pages/ClientePage.jsx (VERSIÓN CORREGIDA - NOMBRES DE CAMPOS FIXED)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Card from "../components/Card";
@@ -21,7 +21,6 @@ import {
 } from "@heroicons/react/24/solid";
 import { useAuth } from "../context/AuthProvider";
 import useOperationalData from '../hooks/useOperationalData';
-import EditableField from "../components/EditableField";
 import EditModal from "../components/EditModal";
 
 // 🆕 ESTRUCTURA MEJORADA CON DESCRIPCIONES Y COLORES
@@ -181,13 +180,18 @@ const ClientePage = () => {
 
   const { user } = useAuth();
   const isAdmin = user && user.role === 'admin';
+  const isServiceUser = user && user.role === 'servicio';
 
   const serviceData = useMemo(() => data?.servicio || {}, [data]);
 
-  const diagnostic = serviceData.diagnostic || "";
-  const specificObjective = serviceData.specificObjective || "";
+  // 🆕 CORRECCIÓN: Usar estado local para contenido con nombres CORRECTOS
+  const [content, setContent] = useState({
+    diagnostic: '',
+    specificObjective: ''
+  });
 
-  // 🌟 CORRECCIÓN: Usar el mismo estado que TalentoHumanoPage
+  // 🆕 CORRECCIÓN: Estados para edición de textos
+  const [editingText, setEditingText] = useState({ field: null, value: '' });
   const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '' });
   const [serviceTools, setServiceTools] = useState({
     preventa: [],
@@ -196,6 +200,16 @@ const ClientePage = () => {
   });
 
   const serviceDataJson = JSON.stringify(serviceData || {});
+
+  // 🆕 CORRECCIÓN: Sincronizar contenido cuando cambian los datos
+  useEffect(() => {
+    if (serviceData) {
+      setContent({
+        diagnostic: serviceData.diagnostic || '',
+        specificObjective: serviceData.specificObjective || ''
+      });
+    }
+  }, [serviceData]);
 
   // 🌟 CORRECCIÓN: useEffect mejorado
   useEffect(() => {
@@ -220,7 +234,33 @@ const ClientePage = () => {
     }
   }, [serviceDataJson, serviceData]);
 
-  
+  // 🆕 CORRECCIÓN: Funciones para edición de textos
+  const startTextEdit = (field, initialValue) => {
+    setEditingText({ field, value: initialValue });
+    setEditingUrl({ toolName: null });
+  };
+
+  const handleContentUpdate = (updatedPayload) => {
+    console.log('📝 ClientePage - handleContentUpdate recibió:', updatedPayload);
+    
+    if (updatedPayload && typeof updatedPayload === 'object') {
+      const key = Object.keys(updatedPayload)[0];
+      const newValue = Object.values(updatedPayload)[0];
+      
+      // Actualizar estado local inmediatamente
+      setContent(prev => ({ ...prev, [key]: newValue }));
+    }
+
+    // Cerrar modal
+    setEditingText({ field: null, value: '' });
+    
+    // Recargar datos
+    setTimeout(() => {
+      if (refetch) {
+        refetch();
+      }
+    }, 500);
+  };
 
   // 🌟 CORRECCIÓN: Función de edición mejorada
   const startUrlEdit = useCallback((toolName, toolKey, currentUrl) => {
@@ -274,6 +314,7 @@ const ClientePage = () => {
 
   const closeModal = useCallback(() => {
     setEditingUrl({ toolName: null, toolKey: null, url: '' });
+    setEditingText({ field: null, value: '' });
   }, []);
 
   // 🆕 RENDERIZADO MEJORADO DE HERRAMIENTAS
@@ -415,21 +456,27 @@ const ClientePage = () => {
 
   return (
     <div className="animate-fadeIn relative">
-      {/* MODAL */}
-      {editingUrl.toolName && (
-        <EditModal
-          type="url"
-          section="servicio"
-          editingData={{
-            toolName: editingUrl.toolName,
-            toolKey: editingUrl.toolKey,
-            url: editingUrl.url,
-            field: editingUrl.toolKey
-          }}
-          onComplete={handleUrlUpdate}
-          onClose={closeModal}
-        />
-      )}
+      {/* MODALES */}
+      <EditModal
+        type="text"
+        section="servicio"
+        editingData={editingText}
+        onComplete={handleContentUpdate}
+        onClose={() => setEditingText({ field: null, value: '' })}
+      />
+
+      <EditModal
+        type="url"
+        section="servicio"
+        editingData={{
+          toolName: editingUrl.toolName,
+          toolKey: editingUrl.toolKey,
+          url: editingUrl.url,
+          field: editingUrl.toolKey
+        }}
+        onComplete={handleUrlUpdate}
+        onClose={closeModal}
+      />
 
       {/* 🆕 HEADER DE PÁGINA MEJORADO */}
       <header className="mb-10">
@@ -466,33 +513,51 @@ const ClientePage = () => {
         </div>
       </header>
 
-      {/* 🆕 DIAGNÓSTICO Y OBJETIVO MEJORADO */}
+      {/* 🆕 DIAGNÓSTICO Y OBJETIVO MEJORADO - CORREGIDO */}
       <section className="mb-12">
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          {/* DIAGNÓSTICO - CORREGIDO */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-2 h-8 bg-prolinco-primary rounded-full"></div>
               <h3 className="text-xl font-bold text-prolinco-dark">Diagnóstico Actual</h3>
             </div>
-            <EditableField
-              initialContent={diagnostic}
-              section="servicio"
-              subsection="diagnostico"
-              onUpdate={refetch}
-            />
+            <div className="text-lg leading-relaxed text-gray-700">
+              <p className="whitespace-pre-line">
+                {content.diagnostic || 'Aún no se ha definido el diagnóstico del área de servicio al cliente.'}
+              </p>
+            </div>
+            {(isAdmin || isServiceUser) && (
+              <button
+                onClick={() => startTextEdit('diagnostic', content.diagnostic || '')}
+                className="mt-4 inline-flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-primary font-semibold rounded-xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary/20"
+              >
+                <PencilIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Editar Diagnóstico</span>
+              </button>
+            )}
           </div>
           
+          {/* OBJETIVO - CORREGIDO */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-2 h-8 bg-prolinco-secondary rounded-full"></div>
               <h3 className="text-xl font-bold text-prolinco-dark">Objetivo Específico</h3>
             </div>
-            <EditableField
-              initialContent={specificObjective}
-              section="servicio"
-              subsection="Objetivos Especificos"
-              onUpdate={refetch}
-            />
+            <div className="text-lg leading-relaxed text-gray-700">
+              <p className="whitespace-pre-line">
+                {content.specificObjective || 'Aún no se ha definido el objetivo específico para el servicio al cliente.'}
+              </p>
+            </div>
+            {(isAdmin || isServiceUser) && (
+              <button
+                onClick={() => startTextEdit('specificObjective', content.specificObjective || '')}
+                className="mt-4 inline-flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-secondary font-semibold rounded-xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-secondary/20"
+              >
+                <PencilIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Editar Objetivo</span>
+              </button>
+            )}
           </div>
         </div>
       </section>

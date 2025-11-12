@@ -1,23 +1,23 @@
-// frontend/src/pages/Service.jsx (VERSIÓN REDISEÑADA - INNOVADORA)
+// frontend/src/pages/Service.jsx (VERSIÓN CORREGIDA - NOMBRES DE CAMPOS FIXED)
 
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { TruckIcon, Cog6ToothIcon, ClipboardDocumentCheckIcon , LinkIcon, EnvelopeIcon , ChatBubbleLeftEllipsisIcon, PhoneIcon, ShareIcon, ChartBarIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { API } from '../api/api';
-// *** NUEVO IMPORT ***
 import EditModal from '../components/EditModal';
-// *** UNIFIED AUTH IMPORT ***
 import { useAuth } from '../context/AuthProvider';
 
 const Service = () => {
-    // *** UNIFIED AUTH USAGE ***
     const { user } = useAuth();
 
-    const [content, setContent] = useState({});
+    // 🆕 CORRECCIÓN: Usar los nombres correctos del backend
+    const [content, setContent] = useState({
+        diagnostic: '',
+        specificObjective: ''
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // *** ESTADO UNIFICADO DE EDICIÓN ***
     const [editingText, setEditingText] = useState({ field: null, value: '' });
     const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '', currentUrl: '' });
 
@@ -47,7 +47,7 @@ const Service = () => {
     
     const [serviceTools, setServiceTools] = useState(initialTools);
 
-    // Lógica de Carga Inicial
+    // 🆕 CORRECCIÓN: Cargar datos con nombres correctos
     const fetchContent = async () => {
         setLoading(true);
         try {
@@ -65,7 +65,11 @@ const Service = () => {
                 postventa: mapUrlsToTools(initialTools.postventa, data),
             });
 
-            setContent(data);
+            // 🆕 CORRECCIÓN CRÍTICA: Usar los nombres correctos del backend
+            setContent({
+                diagnostic: data.diagnostic || '',
+                specificObjective: data.specificObjective || ''
+            });
             setError(null);
         } catch {
             setError("Error al cargar el contenido de Servicio al Cliente.");
@@ -78,10 +82,6 @@ const Service = () => {
         fetchContent();
     }, []);
     
-    // ----------------------------------------------------
-    // *** FUNCIONES DE INICIO Y ACTUALIZACIÓN REUTILIZABLES ***
-    // ----------------------------------------------------
-
     const startTextEdit = (field, initialValue) => {
         setEditingText({ field, value: initialValue });
         setEditingUrl({ toolName: null });
@@ -118,7 +118,6 @@ const Service = () => {
         setEditingUrl({ toolName: null });
     };
 
-
     const renderToolButton = (tool) => {
         const isWhatsapp = tool.type === 'whatsapp';
         const buttonClasses = isWhatsapp 
@@ -148,7 +147,6 @@ const Service = () => {
             </div>
         );
     };
-
 
     if (loading && !editingText.field && !editingUrl.toolName) return <div className="text-prolinco-secondary text-center p-10 font-semibold">Cargando la Plataforma de Servicio al Cliente...</div>;
     if (error && !editingText.field && !editingUrl.toolName) return <div className="text-red-600 text-center p-10 font-semibold">{error}</div>;
@@ -184,7 +182,7 @@ const Service = () => {
                 </div>
             </div>
 
-            {/* *** REEMPLAZO DE LOS MODALES DUPLICADOS POR EL NUEVO COMPONENTE *** */}
+            {/* MODALES */}
             <EditModal
                 type="text"
                 section="servicio"
@@ -259,11 +257,13 @@ const Service = () => {
                                 <h3 className="text-3xl font-bold text-prolinco-dark">Diagnóstico Específico</h3>
                             </div>
                             <div className="text-lg leading-relaxed text-gray-700">
-                                <p className="whitespace-pre-line">{content.diagnostico || 'Aún no se ha definido el diagnóstico específico del área de servicio al cliente.'}</p>
+                                {/* 🆕 CORRECCIÓN: Usar content.diagnostic en lugar de content.diagnostico */}
+                                <p className="whitespace-pre-line">{content.diagnostic || 'Aún no se ha definido el diagnóstico específico del área de servicio al cliente.'}</p>
                             </div>
                             {(isAdmin || isServiceUser) && (
                                 <button
-                                    onClick={() => startTextEdit('diagnóstico', content.diagnostico || '')}
+                                    {/* 🆕 CORRECCIÓN: Usar 'diagnostic' en lugar de 'diagnóstico' */}
+                                    onClick={() => startTextEdit('diagnostic', content.diagnostic || '')}
                                     className="mt-8 inline-flex items-center space-x-3 px-6 py-3 bg-gray-50 hover:bg-gray-100 text-prolinco-primary font-bold rounded-2xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 border-2 border-transparent hover:border-prolinco-primary/30 hover:shadow-lg"
                                 >
                                     <PencilIcon className="h-5 w-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
@@ -284,11 +284,13 @@ const Service = () => {
                                 <h3 className="text-3xl font-bold text-prolinco-dark">Objetivo Específico</h3>
                             </div>
                             <div className="text-lg leading-relaxed text-gray-700">
-                                <p className="whitespace-pre-line">{content.objetivoEspecifico || 'Aún no se ha definido el objetivo específico para el servicio al cliente.'}</p>
+                                {/* 🆕 CORRECCIÓN: Usar content.specificObjective en lugar de content.objetivoEspecifico */}
+                                <p className="whitespace-pre-line">{content.specificObjective || 'Aún no se ha definido el objetivo específico para el servicio al cliente.'}</p>
                             </div>
                             {(isAdmin || isServiceUser) && (
                                 <button
-                                    onClick={() => startTextEdit('objetivo específico', content.objetivoEspecifico || '')}
+                                    {/* 🆕 CORRECCIÓN: Usar 'specificObjective' en lugar de 'objetivo específico' */}
+                                    onClick={() => startTextEdit('specificObjective', content.specificObjective || '')}
                                     className="mt-8 inline-flex items-center space-x-3 px-6 py-3 bg-gray-50 hover:bg-gray-100 text-prolinco-secondary font-bold rounded-2xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-secondary/20 border-2 border-transparent hover:border-prolinco-secondary/30 hover:shadow-lg"
                                 >
                                     <PencilIcon className="h-5 w-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
