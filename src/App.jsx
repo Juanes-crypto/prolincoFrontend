@@ -1,4 +1,4 @@
-// frontend/src/App.jsx (VERSIÓN ACTUALIZADA)
+// frontend/src/App.jsx - VERSIÓN CORREGIDA
 
 import React from 'react';
 import {
@@ -23,7 +23,10 @@ import AdministracionPage from './pages/AdministracionPage';
 // 🌟 COMPONENTES
 import Sidebar from "./components/Sidebar"; 
 import AuthGuard from "./components/AuthGuard";
-import WhatsAppFloat from "./components/WhatsAppFloat"; // 🌟 NUEVO
+import WhatsAppFloat from "./components/WhatsAppFloat";
+
+// 🌟 HOOK DE DATOS
+import useOperationalData from './hooks/useOperationalData';
 
 // ✅ NUEVO: import hooks de sesión
 import { useSessionTimeout, useTabCloseListener } from './hooks/useSessionTimeout';
@@ -37,6 +40,16 @@ const MainLayout = () => {
             </main>
         </div>
     );
+};
+
+// 🌟 NUEVO: Componente wrapper para páginas con datos
+const PageWithData = ({ Component }) => {
+    const { data, loading, error, refetch } = useOperationalData();
+    
+    if (loading) return <div className="text-center p-10">Cargando datos...</div>;
+    if (error) return <div className="text-red-600 text-center p-10">Error: {error}</div>;
+    
+    return <Component data={data} refetch={refetch} />;
 };
 
 function App() {
@@ -62,10 +75,10 @@ function App() {
                     {/* Dashboard es la página de inicio */}
                     <Route index element={<Dashboard />} /> 
                     
-                    {/* 🌟 RUTAS INDIVIDUALES */}
-                    <Route path="servicio" element={<ClientePage />} />
-                    <Route path="talento-humano" element={<TalentoHumanoPage />} />
-                    <Route path="administracion" element={<AdministracionPage />} />
+                    {/* 🌟 RUTAS INDIVIDUALES CON DATOS */}
+                    <Route path="servicio" element={<PageWithData Component={ClientePage} />} />
+                    <Route path="talento-humano" element={<PageWithData Component={TalentoHumanoPage} />} />
+                    <Route path="administracion" element={<PageWithData Component={AdministracionPage} />} />
                     
                     {/* Rutas de Administración */}
                     <Route path="usuarios" element={<UserManagement />} />

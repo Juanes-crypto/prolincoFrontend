@@ -1,4 +1,4 @@
-// frontend/src/hooks/useOperationalData.js
+// frontend/src/hooks/useOperationalData.js - VERSIÓN MEJORADA
 
 import { useState, useEffect } from 'react';
 import { API } from '../api/api';
@@ -33,7 +33,10 @@ const useOperationalData = () => {
             // 🟡 CAMBIO: Obtener datos de cada sección por separado
             const sections = ['admin', 'servicio', 'talento', 'organizacional'];
             const promises = sections.map(section => 
-                API.get(`/content/${section}`, config)
+                API.get(`/content/${section}`, config).catch(err => {
+                    console.warn(`⚠️ Error cargando sección ${section}:`, err.message);
+                    return { data: { section, tools: [], diagnostic: '', specificObjective: '' } };
+                })
             );
             
             // Esperar todas las peticiones
@@ -43,50 +46,37 @@ const useOperationalData = () => {
             const transformedData = {};
             responses.forEach((response, index) => {
                 const section = sections[index];
-                transformedData[section] = response.data;
+                transformedData[section] = response.data || { tools: [], diagnostic: '', specificObjective: '' };
             });
 
-            // Aplanar la data para compatibilidad con páginas existentes
+            console.log('📊 Datos transformados:', transformedData);
+
+            // 🌟 CORRECCIÓN: Estructura simplificada y consistente
             const flattenedData = {
-                // Combinar campos de identidad organizacional
-                mission: transformedData.organizacional?.mission || '',
-                vision: transformedData.organizacional?.vision || '',
-                corporateValues: transformedData.organizacional?.corporateValues || [],
-
-                // Campos de servicio (para ClientePage)
-                diagnostic: transformedData.servicio?.diagnostic || '',
-                specificObjective: transformedData.servicio?.specificObjective || '',
-
-                // Mantener URLs de herramientas por sección para compatibilidad
-                ...transformedData.servicio?.tools?.reduce((acc, tool) => {
-                    acc[tool.name] = tool.url;
-                    return acc;
-                }, {}),
-                ...transformedData.talento?.tools?.reduce((acc, tool) => {
-                    acc[tool.name] = tool.url;
-                    return acc;
-                }, {}),
-                ...transformedData.admin?.tools?.reduce((acc, tool) => {
-                    acc[tool.name] = tool.url;
-                    return acc;
-                }, {}),
-                ...transformedData.organizacional?.tools?.reduce((acc, tool) => {
-                    acc[tool.name] = tool.url;
-                    return acc;
-                }, {}),
-
-                // Mantener referencias a secciones completas para casos especiales
+                // Secciones completas para cada página
                 servicio: transformedData.servicio,
                 talento: transformedData.talento,
                 admin: transformedData.admin,
-                organizacional: transformedData.organizacional
+                organizacional: transformedData.organizacional,
+                
+                // Campos específicos para compatibilidad
+                mission: transformedData.organizacional?.mission || '',
+                vision: transformedData.organizacional?.vision || '',
+                corporateValues: transformedData.organizacional?.corporateValues || [],
+                diagnostic: transformedData.servicio?.diagnostic || '',
+                specificObjective: transformedData.servicio?.specificObjective || ''
             };
 
             setData(flattenedData);
         } catch (err) {
-            console.error("Error al cargar datos operacionales:", err);
+            console.error("Error general al cargar datos operacionales:", err);
             setError("Fallo al cargar los datos. Verifique el backend.");
-            setData({}); // Asegura que 'data' sea un objeto vacío en caso de error
+            setData({ 
+                servicio: { tools: [] },
+                talento: { tools: [] }, 
+                admin: { tools: [] },
+                organizacional: { tools: [] }
+            });
         } finally {
             setLoading(false);
         }

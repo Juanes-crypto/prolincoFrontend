@@ -16,11 +16,13 @@ import {
   ShoppingCartIcon,
   HeartIcon,
   ArrowTopRightOnSquareIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon
 } from "@heroicons/react/24/solid";
 import { useAuth } from "../context/AuthProvider";
 import useOperationalData from '../hooks/useOperationalData';
 import EditableField from "../components/EditableField";
-import ToolUrlModal from "../components/ToolUrlModal";
+import EditModal from "../components/EditModal";
 
 // 🆕 ESTRUCTURA MEJORADA CON DESCRIPCIONES Y COLORES
 const TOOLS_STRUCTURE = {
@@ -70,7 +72,7 @@ const TOOLS_STRUCTURE = {
       color: "from-pink-500 to-rose-500"
     },
     { 
-      name: "WhatsApp Business", 
+      name: "WhatsApp Venta", 
       key: "WhatsApp Venta", 
       icon: PhoneIcon, 
       type: "whatsapp",
@@ -143,12 +145,35 @@ const PHASES_CONFIG = {
   }
 };
 
-// Función auxiliar
-const mapUrlsToTools = (tools, urls) =>
-  tools.map((tool) => ({
-    ...tool,
-    url: urls[tool.key] || "#",
-  }));
+// 🌟 CORRECCIÓN CRÍTICA: Función de mapeo mejorada
+const mapToolsWithData = (tools, data) => {
+  console.log('🔄 ClientePage - Mapeando herramientas con datos:', data);
+  
+  if (!data || !data.tools) {
+    return tools.map(tool => ({
+      ...tool,
+      url: '#',
+      isConfigured: false
+    }));
+  }
+
+  return tools.map(tool => {
+    const backendTool = data.tools.find(backendTool => {
+      const backendName = backendTool.name.toLowerCase().replace(/\s/g, '');
+      const toolName = tool.name.toLowerCase().replace(/\s/g, '');
+      console.log(`🔍 ClientePage - Comparando: "${backendName}" vs "${toolName}"`);
+      return backendName === toolName;
+    });
+
+    console.log(`📊 ClientePage - Herramienta "${tool.name}" encontrada:`, backendTool);
+    
+    return {
+      ...tool,
+      url: backendTool ? backendTool.url || '#' : '#',
+      isConfigured: backendTool && backendTool.url && backendTool.url !== '' && backendTool.url !== '#'
+    };
+  });
+};
 
 const ClientePage = () => {
   // Usar hook directamente
@@ -162,7 +187,8 @@ const ClientePage = () => {
   const diagnostic = serviceData.diagnostic || "";
   const specificObjective = serviceData.specificObjective || "";
 
-  const [editingTool, setEditingTool] = useState(null);
+  // 🌟 CORRECCIÓN: Usar el mismo estado que TalentoHumanoPage
+  const [editingUrl, setEditingUrl] = useState({ toolName: null, toolKey: null, url: '' });
   const [serviceTools, setServiceTools] = useState({
     preventa: [],
     venta: [],
@@ -171,29 +197,84 @@ const ClientePage = () => {
 
   const serviceDataJson = JSON.stringify(serviceData || {});
 
-  // Sincronizar herramientas con datos
+  // 🌟 CORRECCIÓN: useEffect mejorado
   useEffect(() => {
-    if (serviceData && Object.keys(serviceData).length > 0) {
+    console.log('🎯 ClientePage - useEffect ejecutado con serviceData:', serviceData);
+    
+    if (serviceData && serviceData.tools) {
+      console.log('📊 ClientePage - Tools del backend:', serviceData.tools);
+      const mappedTools = {
+        preventa: mapToolsWithData(TOOLS_STRUCTURE.preventa, serviceData),
+        venta: mapToolsWithData(TOOLS_STRUCTURE.venta, serviceData),
+        postventa: mapToolsWithData(TOOLS_STRUCTURE.postventa, serviceData),
+      };
+      console.log('🔄 ClientePage - Herramientas mapeadas:', mappedTools);
+      setServiceTools(mappedTools);
+    } else {
+      console.log('📭 ClientePage - No hay datos, usando valores por defecto');
       setServiceTools({
-        preventa: mapUrlsToTools(TOOLS_STRUCTURE.preventa, serviceData),
-        venta: mapUrlsToTools(TOOLS_STRUCTURE.venta, serviceData),
-        postventa: mapUrlsToTools(TOOLS_STRUCTURE.postventa, serviceData),
+        preventa: mapToolsWithData(TOOLS_STRUCTURE.preventa, {}),
+        venta: mapToolsWithData(TOOLS_STRUCTURE.venta, {}),
+        postventa: mapToolsWithData(TOOLS_STRUCTURE.postventa, {}),
       });
     }
   }, [serviceDataJson, serviceData]);
 
   
 
-  const startToolUrlEdit = useCallback((tool) => {
-    setEditingTool(tool);
+  // 🌟 CORRECCIÓN: Función de edición mejorada
+  const startUrlEdit = useCallback((toolName, toolKey, currentUrl) => {
+    console.log('🎯 ClientePage - startUrlEdit llamado:', toolName, toolKey, currentUrl);
+    setEditingUrl({ toolName, toolKey, url: currentUrl });
   }, []);
 
-  const handleToolUrlUpdate = useCallback(() => {
-    if (refetch) {
-      refetch();
+  // 🌟 CORRECCIÓN CRÍTICA: handleUrlUpdate mejorado
+  const handleUrlUpdate = useCallback((updatedData) => {
+    console.log('🔄 ClientePage - handleUrlUpdate recibió:', updatedData);
+    
+    if (updatedData && updatedData.url) {
+      const { toolName, toolKey, url } = updatedData;
+      const newUrl = url;
+      
+      // Actualizar estado inmediatamente
+      setServiceTools(prev => {
+        const updatedTools = { ...prev };
+        
+        Object.keys(updatedTools).forEach(phase => {
+          updatedTools[phase] = updatedTools[phase].map(tool => {
+            const toolMatches = 
+              tool.key === toolKey || 
+              tool.name === toolName ||
+              tool.name.toLowerCase().replace(/\s/g, '') === (toolName || '').toLowerCase().replace(/\s/g, '');
+            
+            if (toolMatches) {
+              console.log(`🔄 ClientePage - Actualizando: ${tool.name} con URL: ${newUrl}`);
+              return {
+                ...tool,
+                url: newUrl,
+                isConfigured: !!newUrl && newUrl !== '' && newUrl !== '#'
+              };
+            }
+            return tool;
+          });
+        });
+        
+        return updatedTools;
+      });
     }
-    setEditingTool(null);
+    
+    setEditingUrl({ toolName: null, toolKey: null, url: '' });
+    
+    // Recargar datos después de un delay
+    setTimeout(() => {
+      console.log('🔄 ClientePage - Forzando recarga...');
+      refetch();
+    }, 500);
   }, [refetch]);
+
+  const closeModal = useCallback(() => {
+    setEditingUrl({ toolName: null, toolKey: null, url: '' });
+  }, []);
 
   // 🆕 RENDERIZADO MEJORADO DE HERRAMIENTAS
   const renderToolButton = useCallback((tool) => {
@@ -206,38 +287,69 @@ const ClientePage = () => {
           target="_blank"
           rel="noopener noreferrer"
           className={`group relative w-full inline-flex items-center justify-between p-4 rounded-xl transition-all duration-300 shadow-sm border ${
-            isWhatsapp
-              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border-green-600 hover:shadow-lg hover:scale-[1.02]'
-              : 'bg-white text-gray-700 border-gray-200 hover:shadow-lg hover:border-prolinco-secondary hover:scale-[1.02]'
+            tool.isConfigured
+              ? isWhatsapp
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border-green-600 hover:shadow-lg hover:scale-[1.02]'
+                : 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-lg hover:scale-[1.02]'
+              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
           }`}
+          onClick={!tool.isConfigured ? (e) => e.preventDefault() : undefined}
         >
           <div className="flex items-center space-x-3">
             <div className={`p-2 rounded-lg ${
-              isWhatsapp ? 'bg-white/20' : 'bg-prolinco-primary/10'
+              tool.isConfigured 
+                ? isWhatsapp ? 'bg-white/20' : 'bg-white/20'
+                : 'bg-gray-200'
             }`}>
-              <LinkIcon className={`h-5 w-5 ${isWhatsapp ? 'text-white' : 'text-prolinco-primary'}`} />
+              <LinkIcon className={`h-5 w-5 ${
+                tool.isConfigured ? 'text-white' : 'text-gray-400'
+              }`} />
             </div>
             <span className="font-semibold text-sm">
-              {isWhatsapp ? "Contactar por WhatsApp" : "Abrir Herramienta"}
+              {tool.isConfigured 
+                ? (isWhatsapp ? "Contactar por WhatsApp" : "Abrir Herramienta")
+                : "No Configurado"
+              }
             </span>
           </div>
-          <ArrowTopRightOnSquareIcon className={`h-4 w-4 ${
-            isWhatsapp ? 'text-white/80' : 'text-gray-400'
-          } group-hover:translate-x-0.5 transition-transform`} />
+          {tool.isConfigured && (
+            <ArrowTopRightOnSquareIcon className="h-4 w-4 opacity-90" />
+          )}
         </a>
         
-        {isAdmin && (
-          <button
-            onClick={() => startToolUrlEdit(tool)}
-            className="w-full inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group"
-          >
-            <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" /> 
-            Cambiar URL
-          </button>
-        )}
+        {/* 🌟 CORRECCIÓN: Estado de configuración */}
+        <div className="flex items-center justify-between">
+          <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
+            tool.isConfigured 
+              ? 'bg-green-100 text-green-700 border border-green-200'
+              : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+          }`}>
+            {tool.isConfigured ? (
+              <>
+                <CheckCircleIcon className="h-3 w-3" />
+                <span>Configurado</span>
+              </>
+            ) : (
+              <>
+                <ExclamationCircleIcon className="h-3 w-3" />
+                <span>Por Configurar</span>
+              </>
+            )}
+          </div>
+          
+          {isAdmin && (
+            <button
+              onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
+              className="inline-flex items-center px-3 py-1 text-sm text-prolinco-primary hover:text-prolinco-secondary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300"
+            >
+              <PencilIcon className="h-4 w-4 mr-1" /> 
+              {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}
+            </button>
+          )}
+        </div>
       </div>
     );
-  }, [isAdmin, startToolUrlEdit]);
+  }, [isAdmin, startUrlEdit]);
 
   // 🆕 COMPONENTE DE FASE MEJORADO
   const PhaseSection = ({ phaseKey, tools }) => {
@@ -304,12 +416,18 @@ const ClientePage = () => {
   return (
     <div className="animate-fadeIn relative">
       {/* MODAL */}
-      {editingTool && (
-        <ToolUrlModal
-          tool={editingTool}
+      {editingUrl.toolName && (
+        <EditModal
+          type="url"
           section="servicio"
-          onComplete={handleToolUrlUpdate}
-          onClose={() => setEditingTool(null)}
+          editingData={{
+            toolName: editingUrl.toolName,
+            toolKey: editingUrl.toolKey,
+            url: editingUrl.url,
+            field: editingUrl.toolKey
+          }}
+          onComplete={handleUrlUpdate}
+          onClose={closeModal}
         />
       )}
 

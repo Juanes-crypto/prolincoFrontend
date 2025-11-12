@@ -43,7 +43,8 @@ const EditModal = ({ type, section, editingData, onComplete, onClose }) => {
         if (section === 'organizacional' && actualField === 'corporateValues') {
             payload[actualField] = localValue.split(',').map(item => item.trim()).filter(item => item.length > 0);
         } else {
-            payload[actualField] = localValue;
+            // 🌟 CORRECCIÓN: Aplicar trim() para eliminar espacios
+            payload[actualField] = typeof localValue === 'string' ? localValue.trim() : localValue;
         }
 
         try {
