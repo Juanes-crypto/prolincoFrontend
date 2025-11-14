@@ -444,39 +444,29 @@ const AdministracionPage = () => {
                 onClose={closeModal}
             />
 
-            {/* 🆕 HEADER COMPACT Y RESPONSIVO */}
-            <header className="mb-6 sm:mb-8 lg:mb-12">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center space-x-3 sm:space-x-4">
-                        <div className="p-2 sm:p-3 bg-prolinco-primary/10 rounded-xl sm:rounded-2xl">
-                            <BuildingOfficeIcon className="h-6 w-6 sm:h-8 sm:w-8 text-prolinco-primary" />
+            {/* HEADER SIMPLIFICADO */}
+            <header className="mb-8">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <BuildingOfficeIcon className="h-8 w-8 text-prolinco-primary" />
                         </div>
                         <div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-prolinco-dark leading-tight">
-                                Administración Estratégica
-                            </h1>
-                            <p className="text-gray-600 text-sm sm:text-base lg:text-lg mt-1 max-w-2xl">
-                                Gestión integral de identidad organizacional y herramientas estratégicas
-                            </p>
+                            <h1 className="text-3xl font-bold text-gray-900">Administración Estratégica</h1>
+                            <p className="text-gray-600">Gestión integral de identidad organizacional</p>
                         </div>
                     </div>
 
-                    {/* 🆕 INDICADORES COMPACTOS */}
-                    <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
-                        <div className="flex items-center space-x-2 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                    {/* INDICADORES SIMPLIFICADOS */}
+                    <div className="hidden lg:flex items-center space-x-6 text-sm">
+                        <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-green-700 font-medium">Sistema activo</span>
+                            <span className="text-gray-600">{adminTools.length} herramientas</span>
                         </div>
-                        <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                        <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-blue-700 font-medium">{adminTools.length} herramientas</span>
+                            <span className="text-gray-600">{adminTools.filter(t => t.isConfigured).length} configuradas</span>
                         </div>
-                        {isAdmin && (
-                            <div className="flex items-center space-x-2 bg-prolinco-primary/10 px-3 py-2 rounded-lg border border-prolinco-primary/20">
-                                <div className="w-2 h-2 bg-prolinco-primary rounded-full"></div>
-                                <span className="text-prolinco-dark font-medium">Modo admin</span>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>

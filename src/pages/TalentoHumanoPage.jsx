@@ -311,28 +311,7 @@ const TalentoHumanoPage = () => {
     };
 
     return (
-        <div className="animate-fadeIn relative min-h-screen">
-            {/* ELEMENTOS GEOMÉTRICOS DE FONDO - LÍNEAS Y FORMAS SOFISTICADAS */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* LÍNEAS DIAGONALES */}
-                <div className="absolute top-0 left-0 w-full h-full">
-                    <div className="absolute top-20 left-10 w-px h-32 bg-gradient-to-b from-prolinco-primary/20 to-transparent rotate-12"></div>
-                    <div className="absolute top-40 right-20 w-px h-24 bg-gradient-to-b from-prolinco-secondary/20 to-transparent -rotate-12"></div>
-                    <div className="absolute bottom-32 left-1/4 w-px h-40 bg-gradient-to-b from-gray-300/30 to-transparent rotate-45"></div>
-                </div>
-
-                {/* FORMAS GEOMÉTRICAS ABSTRACTAS */}
-                <div className="absolute top-16 right-16 w-20 h-20 border border-prolinco-primary/10 rotate-45"></div>
-                <div className="absolute bottom-24 left-16 w-16 h-16 border border-prolinco-secondary/10 rotate-12"></div>
-                <div className="absolute top-1/2 right-8 w-12 h-12 bg-gradient-to-br from-gray-100/20 to-transparent rotate-30"></div>
-
-                {/* PATRÓN DE PUNTOS */}
-                <div className="absolute top-32 left-1/3 flex space-x-2">
-                    <div className="w-1 h-1 bg-prolinco-primary/30 rounded-full"></div>
-                    <div className="w-1 h-1 bg-prolinco-secondary/30 rounded-full"></div>
-                    <div className="w-1 h-1 bg-gray-400/30 rounded-full"></div>
-                </div>
-            </div>
+        <div className="animate-fadeIn min-h-screen bg-gray-50/30">
 
             {/* 🆕 MODALES PARA EDICIÓN */}
             <EditModal
@@ -356,130 +335,101 @@ const TalentoHumanoPage = () => {
                 onClose={closeModal}
             />
 
-            {/* HEADER ASIMÉTRICO CON ELEMENTOS GEOMÉTRICOS */}
-            <header className="relative mb-16 overflow-hidden">
-                {/* BARRA GEOMÉTRICA DIAGONAL */}
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-bl from-prolinco-primary/5 to-transparent transform skew-x-12"></div>
-
-                <div className="relative z-10 flex items-center justify-between">
+            {/* HEADER SIMPLIFICADO CON ELEMENTOS GEOMÉTRICOS SUTILES */}
+            <header className="mb-12">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-6">
-                        <div className="relative">
-                            <div className="p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-                                <UsersIcon className="h-10 w-10 text-prolinco-primary" />
-                            </div>
-                            {/* ELEMENTO GEOMÉTRICO DECORATIVO */}
-                            <div className="absolute -top-2 -right-2 w-4 h-4 bg-prolinco-secondary/20 rotate-45"></div>
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <UsersIcon className="h-8 w-8 text-prolinco-primary" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-prolinco-dark mb-2">Talento Humano</h1>
-                            <p className="text-gray-600 text-lg max-w-md">Gestión integral de recursos humanos y desarrollo organizacional</p>
+                            <h1 className="text-3xl font-bold text-gray-900">Talento Humano</h1>
+                            <p className="text-gray-600">Gestión integral de recursos humanos</p>
                         </div>
                     </div>
 
-                    {/* INDICADORES DE ESTADO CON MICRO-ANIMACIONES */}
+                    {/* INDICADORES SIMPLIFICADOS */}
                     <div className="hidden lg:flex items-center space-x-6 text-sm">
-                        <div className="flex items-center space-x-2 group">
-                            <div className="w-2 h-2 bg-green-500 rounded-full group-hover:scale-125 transition-transform duration-300"></div>
-                            <span className="text-gray-600">Sistema activo</span>
-                        </div>
-                        <div className="flex items-center space-x-2 group">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full group-hover:scale-125 transition-transform duration-300"></div>
+                        <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span className="text-gray-600">{talentTools.length} herramientas</span>
                         </div>
-                        <div className="flex items-center space-x-2 group">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full group-hover:scale-125 transition-transform duration-300"></div>
+                        <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                             <span className="text-gray-600">{talentTools.filter(t => t.isConfigured).length} configuradas</span>
                         </div>
                     </div>
                 </div>
             </header>
 
-            {/* SECCIÓN DIAGNÓSTICO CON LAYOUT ASIMÉTRICO */}
-            <section className="mb-16 relative">
-                {/* LÍNEA GEOMÉTRICA DE CONEXIÓN */}
-                <div className="absolute left-8 top-8 bottom-8 w-px bg-gradient-to-b from-prolinco-primary/20 via-transparent to-prolinco-secondary/20"></div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pl-16">
-                    {/* DIAGNÓSTICO - POSICIÓN ASIMÉTRICA */}
-                    <div className="xl:col-span-2 bg-white rounded-3xl shadow-lg border border-gray-200 p-8 relative overflow-hidden group hover:shadow-xl transition-all duration-500">
-                        {/* ELEMENTO GEOMÉTRICO INTERNO */}
-                        <div className="absolute top-4 right-4 w-16 h-16 border border-prolinco-primary/10 rotate-45 group-hover:rotate-90 transition-transform duration-700"></div>
-
-                        <div className="relative z-10">
-                            <div className="flex items-center space-x-4 mb-6">
-                                <div className="w-3 h-12 bg-prolinco-primary rounded-full"></div>
-                                <h3 className="text-2xl font-bold text-prolinco-dark">Diagnóstico Actual</h3>
-                            </div>
-                            <div className="text-lg leading-relaxed text-gray-700">
-                                <p className="whitespace-pre-line">
-                                    {content.diagnostic || 'Aún no se ha definido el diagnóstico del área de talento humano.'}
-                                </p>
-                            </div>
-                            {(isAdmin || isTalentUser) && (
-                                <button
-                                    onClick={() => startTextEdit('diagnostic', content.diagnostic || '')}
-                                    className="mt-6 inline-flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-primary font-semibold rounded-xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary/20"
-                                >
-                                    <PencilIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                                    <span>Editar Diagnóstico</span>
-                                </button>
-                            )}
+            {/* SECCIÓN DIAGNÓSTICO SIMPLIFICADA */}
+            <section className="mb-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* DIAGNÓSTICO */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-2 h-8 bg-prolinco-primary rounded-full"></div>
+                            <h3 className="text-xl font-semibold text-gray-900">Diagnóstico Actual</h3>
                         </div>
+                        <div className="text-gray-700 leading-relaxed">
+                            <p className="whitespace-pre-line">
+                                {content.diagnostic || 'Aún no se ha definido el diagnóstico del área de talento humano.'}
+                            </p>
+                        </div>
+                        {(isAdmin || isTalentUser) && (
+                            <button
+                                onClick={() => startTextEdit('diagnostic', content.diagnostic || '')}
+                                className="mt-4 inline-flex items-center space-x-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-primary font-medium rounded-lg transition-colors"
+                            >
+                                <PencilIcon className="h-4 w-4" />
+                                <span>Editar</span>
+                            </button>
+                        )}
                     </div>
 
-                    {/* OBJETIVO ESPECÍFICO - POSICIÓN ASIMÉTRICA */}
-                    <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 relative overflow-hidden group hover:shadow-xl transition-all duration-500">
-                        {/* ELEMENTO GEOMÉTRICO INTERNO */}
-                        <div className="absolute bottom-4 left-4 w-12 h-12 border border-prolinco-secondary/10 rotate-12 group-hover:-rotate-12 transition-transform duration-700"></div>
-
-                        <div className="relative z-10">
-                            <div className="flex items-center space-x-4 mb-6">
-                                <div className="w-3 h-12 bg-prolinco-secondary rounded-full"></div>
-                                <h3 className="text-2xl font-bold text-prolinco-dark">Objetivo Específico</h3>
-                            </div>
-                            <div className="text-lg leading-relaxed text-gray-700">
-                                <p className="whitespace-pre-line">
-                                    {content.specificObjective || 'Aún no se ha definido el objetivo específico para talento humano.'}
-                                </p>
-                            </div>
-                            {(isAdmin || isTalentUser) && (
-                                <button
-                                    onClick={() => startTextEdit('specificObjective', content.specificObjective || '')}
-                                    className="mt-6 inline-flex items-center space-x-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-secondary font-semibold rounded-xl transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-secondary/20"
-                                >
-                                    <PencilIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                                    <span>Editar Objetivo</span>
-                                </button>
-                            )}
+                    {/* OBJETIVO ESPECÍFICO */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-2 h-8 bg-prolinco-secondary rounded-full"></div>
+                            <h3 className="text-xl font-semibold text-gray-900">Objetivo Específico</h3>
                         </div>
+                        <div className="text-gray-700 leading-relaxed">
+                            <p className="whitespace-pre-line">
+                                {content.specificObjective || 'Aún no se ha definido el objetivo específico para talento humano.'}
+                            </p>
+                        </div>
+                        {(isAdmin || isTalentUser) && (
+                            <button
+                                onClick={() => startTextEdit('specificObjective', content.specificObjective || '')}
+                                className="mt-4 inline-flex items-center space-x-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-prolinco-secondary font-medium rounded-lg transition-colors"
+                            >
+                                <PencilIcon className="h-4 w-4" />
+                                <span>Editar</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </section>
 
-            {/* SECCIÓN DE HERRAMIENTAS CON ELEMENTOS GEOMÉTRICOS */}
-            <section className="relative">
-                {/* TÍTULO CON ELEMENTOS VISUALES */}
-                <div className="flex items-center space-x-6 mb-12">
-                    <div className="w-1 h-16 bg-gradient-to-b from-prolinco-primary to-prolinco-secondary rounded-full"></div>
+            {/* SECCIÓN DE HERRAMIENTAS SIMPLIFICADA */}
+            <section>
+                {/* TÍTULO SIMPLIFICADO */}
+                <div className="flex items-center space-x-4 mb-8">
+                    <div className="w-1 h-12 bg-gradient-to-b from-prolinco-primary to-prolinco-secondary rounded-full"></div>
                     <div>
-                        <h2 className="text-3xl font-black text-prolinco-dark mb-2">Herramientas por Categoría</h2>
-                        <p className="text-gray-600 text-lg">Recursos organizados para la gestión integral del talento humano</p>
+                        <h2 className="text-2xl font-bold text-gray-900">Herramientas por Categoría</h2>
+                        <p className="text-gray-600">Recursos organizados para la gestión integral</p>
                     </div>
                 </div>
 
-                {/* GRID ASIMÉTRICO CON ESPACIOS GEOMÉTRICOS */}
-                <div className="space-y-16">
-                    {Object.keys(toolsByCategory).map((category, index) => (
-                        <div key={category} className={`relative ${index % 2 === 1 ? 'xl:ml-12' : ''}`}>
-                            {/* ELEMENTOS GEOMÉTRICOS DE SEPARACIÓN */}
-                            <div className="absolute -left-8 top-8 w-4 h-4 border border-gray-300/30 rotate-45"></div>
-                            <div className="absolute -right-4 bottom-8 w-2 h-2 bg-prolinco-primary/20 rounded-full"></div>
-
-                            <CategorySection
-                                category={category}
-                                tools={toolsByCategory[category]}
-                            />
-                        </div>
+                {/* GRID SIMPLIFICADO */}
+                <div className="space-y-12">
+                    {Object.keys(toolsByCategory).map((category) => (
+                        <CategorySection
+                            key={category}
+                            category={category}
+                            tools={toolsByCategory[category]}
+                        />
                     ))}
                 </div>
             </section>
@@ -487,4 +437,4 @@ const TalentoHumanoPage = () => {
     );
 };
 
-export default TalentoHumanoPage;
+export default TalentoHumanoPage; 
