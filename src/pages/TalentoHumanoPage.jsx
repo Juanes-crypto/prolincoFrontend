@@ -1,4 +1,4 @@
-// frontend/src/pages/TalentoHumanoPage.jsx (VERSIÓN COMPLETA Y CORREGIDA)
+// frontend/src/pages/TalentoHumanoPage.jsx (SOLO CAMBIOS DE DISEÑO)
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
@@ -202,6 +202,7 @@ const TalentoHumanoPage = () => {
         return acc;
     }, {});
 
+    // 🌟 CORRECCIÓN: Renderizado de botones unificado (PATRÓN CLIENTEPAGE)
     const renderToolCard = (tool) => {
         const CategoryIcon = CATEGORIES_CONFIG[tool.category]?.icon || DocumentTextIcon;
         return (
@@ -236,28 +237,39 @@ const TalentoHumanoPage = () => {
                             )}
                         </div>
                     </div>
+                    
+                    {/* 🌟 CORRECCIÓN: BOTONES CON PATRÓN CLIENTEPAGE - ÁREA COMPLETA */}
                     <div className="mt-auto space-y-3">
+                        {/* BOTÓN PRINCIPAL - ÁREA COMPLETA */}
                         <a 
                             href={tool.isConfigured ? tool.url : '#'} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className={`w-full inline-flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border-2 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary ${
+                            className={`group relative w-full inline-flex items-center justify-between p-4 rounded-xl transition-all duration-300 shadow-sm border ${
                                 tool.isConfigured 
-                                    ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-2xl hover:scale-[1.03] hover:-translate-y-1' 
-                                    : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                                    ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-lg hover:scale-[1.02]' 
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                             }`} 
                             onClick={!tool.isConfigured ? (e) => e.preventDefault() : undefined}
                         >
                             <div className="flex items-center space-x-3">
-                                <div className={`p-1.5 rounded-lg ${tool.isConfigured ? 'bg-white/20' : 'bg-gray-200'}`}>
-                                    <LinkIcon className="h-4 w-4" />
+                                <div className={`p-2 rounded-lg ${
+                                    tool.isConfigured ? 'bg-white/20' : 'bg-gray-200'
+                                }`}>
+                                    <LinkIcon className={`h-5 w-5 ${
+                                        tool.isConfigured ? 'text-white' : 'text-gray-400'
+                                    }`} />
                                 </div>
-                                <span className="font-bold text-sm">{tool.isConfigured ? 'Abrir Documento' : 'No Configurado'}</span>
+                                <span className="font-semibold text-sm">
+                                    {tool.isConfigured ? 'Abrir Herramienta' : 'No Configurado'}
+                                </span>
                             </div>
                             {tool.isConfigured && (
-                                <ArrowTopRightOnSquareIcon className="h-4 w-4 opacity-90 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
+                                <ArrowTopRightOnSquareIcon className="h-4 w-4 opacity-90" />
                             )}
                         </a>
+                        
+                        {/* BOTÓN CONFIGURACIÓN - ÁREA COMPLETA */}
                         {isAdmin && (
                             <button 
                                 onClick={(e) => { 
@@ -265,9 +277,9 @@ const TalentoHumanoPage = () => {
                                     e.preventDefault(); 
                                     startUrlEdit(tool.name, tool.key, tool.url); 
                                 }} 
-                                className="w-full inline-flex items-center justify-center px-4 py-3 text-sm text-gray-600 hover:text-prolinco-primary font-semibold bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-prolinco-primary/20 focus:border-prolinco-primary border-2 border-transparent hover:border-prolinco-primary/30 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+                                className="w-full inline-flex items-center justify-center px-4 py-3 text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary/20 cursor-pointer"
                             >
-                                <PencilIcon className="h-4 w-4 mr-3 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+                                <PencilIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                                 <span>{tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}</span>
                             </button>
                         )}
@@ -437,4 +449,4 @@ const TalentoHumanoPage = () => {
     );
 };
 
-export default TalentoHumanoPage; 
+export default TalentoHumanoPage;

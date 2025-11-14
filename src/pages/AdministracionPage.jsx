@@ -1,4 +1,4 @@
-// frontend/src/pages/AdministracionPage.jsx (VERSIÓN CORREGIDA - SECCIONES FIXED)
+// frontend/src/pages/AdministracionPage.jsx (SOLO CAMBIOS DE DISEÑO)
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
@@ -252,16 +252,7 @@ const AdministracionPage = () => {
         setEditingText({ section: null, field: null, value: '' });
     };
 
-    // 🆕 FUNCIÓN MEJORADA PARA ABRIR DOCUMENTOS
-    const openDocument = (url, toolName) => {
-        if (url && url !== '#') {
-            window.open(url, '_blank', 'noopener,noreferrer');
-        } else {
-            alert(`${toolName} no está configurado. ${isAdmin ? 'Puedes configurarlo haciendo clic en "Configurar URL".' : 'Contacta al administrador.'}`);
-        }
-    };
-
-    // 🆕 RENDERIZADO MEJORADO - COMPLETAMENTE RESPONSIVO
+    // 🌟 CORRECCIÓN: Renderizado de botones unificado (PATRÓN CLIENTEPAGE)
     const renderToolCard = (tool) => {
         const importanceConfig = IMPORTANCE_CONFIG[tool.importance];
         const CategoryIcon = CATEGORIES_CONFIG[tool.category]?.icon || DocumentTextIcon;
@@ -315,30 +306,42 @@ const AdministracionPage = () => {
                         </div>
                     </div>
 
-                    {/* 🆕 BOTONES MEJORADOS - COMPACTOS Y RESPONSIVOS */}
+                    {/* 🌟 CORRECCIÓN: BOTONES CON PATRÓN CLIENTEPAGE - ÁREA COMPLETA */}
                     <div className="mt-auto space-y-2">
-                        <button
-                            onClick={() => openDocument(tool.url, tool.name)}
-                            className={`w-full inline-flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all duration-300 border text-sm ${tool.isConfigured
-                                ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-md hover:scale-[1.02]'
-                                : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                }`}
+                        {/* BOTÓN PRINCIPAL - ÁREA COMPLETA */}
+                        <a
+                            href={tool.isConfigured ? tool.url : '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`group relative w-full inline-flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 shadow-sm border ${
+                                tool.isConfigured
+                                    ? 'bg-prolinco-secondary text-white border-prolinco-secondary hover:bg-prolinco-primary hover:border-prolinco-primary hover:shadow-lg hover:scale-[1.02]'
+                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                            }`}
+                            onClick={!tool.isConfigured ? (e) => e.preventDefault() : undefined}
                         >
-                            <div className="flex items-center space-x-2">
-                                <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                                <span className="font-semibold">
+                            <div className="flex items-center space-x-2 sm:space-x-3">
+                                <div className={`p-1.5 sm:p-2 rounded-lg ${
+                                    tool.isConfigured ? 'bg-white/20' : 'bg-gray-200'
+                                }`}>
+                                    <LinkIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                                        tool.isConfigured ? 'text-white' : 'text-gray-400'
+                                    }`} />
+                                </div>
+                                <span className="font-semibold text-sm">
                                     {tool.isConfigured ? 'Abrir Documento' : 'No Configurado'}
                                 </span>
                             </div>
                             {tool.isConfigured && (
-                                <ArrowTopRightOnSquareIcon className="h-3 w-3 sm:h-4 sm:w-4 opacity-80" />
+                                <ArrowTopRightOnSquareIcon className="h-3 w-3 sm:h-4 sm:w-4 opacity-90" />
                             )}
-                        </button>
+                        </a>
 
+                        {/* BOTÓN CONFIGURACIÓN - ÁREA COMPLETA */}
                         {isAdmin && (
                             <button
                                 onClick={() => startUrlEdit(tool.name, tool.key, tool.url)}
-                                className="w-full inline-flex items-center justify-center px-2 py-2 text-xs sm:text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary focus:ring-offset-1 cursor-pointer"
+                                className="w-full inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm text-gray-600 hover:text-prolinco-primary font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-prolinco-primary/20 cursor-pointer"
                             >
                                 <PencilIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 group-hover:scale-110 transition-transform" />
                                 {tool.isConfigured ? 'Cambiar URL' : 'Configurar URL'}

@@ -27,20 +27,20 @@ import EditModal from "../components/EditModal";
 const TOOLS_STRUCTURE = {
   preventa: [
     { 
-      name: "Volantes Digitales", 
-      key: "Volantes Digitales", 
+      name: "Volantes Digitales",
+      key: "Volantes Digitales",
       icon: MegaphoneIcon,
       description: "Material promocional digital para captar clientes",
       color: "from-blue-500 to-cyan-500"
     },
-    { 
-      name: "Carteles Publicitarios", 
-      key: "Carteles Publicitarios", 
+    {
+      name: "Carteles Publicitarios",
+      key: "Carteles Publicitarios",
       icon: ChartBarIcon,
       description: "Diseños para puntos de venta y ubicaciones estratégicas",
       color: "from-purple-500 to-indigo-500"
     },
-    { 
+    {
       name: "Formulario de Contacto", 
       key: "Formulario de Contacto", 
       icon: EnvelopeIcon,
