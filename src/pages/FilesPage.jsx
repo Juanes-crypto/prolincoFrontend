@@ -1,233 +1,178 @@
-// frontend/src/pages/FilesPage.jsx
-
-import React, { useState, useEffect } from "react"; 
-import DocumentUpload from "../components/DocumentUpload";
+import React, { useState, useEffect } from 'react';
 import { API } from '../api/api';
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/solid"; 
-// ✅ NUEVA IMPORTACIÓN: Importar el hook para acceder al usuario y su rol
-import { useAuth } from '../context/AuthProvider'; 
+import { useAuth } from '../context/AuthProvider';
+import { 
+    FolderIcon, 
+    ArrowUpTrayIcon, 
+    TrashIcon, 
+    DocumentIcon,
+    ArrowDownTrayIcon 
+} from '@heroicons/react/24/solid';
+
 const FilesPage = () => {
-  // ✅ NUEVO USO: Obtener el usuario del contexto
-  const { user } = useAuth();
-    
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const token = localStorage.getItem("userToken");
-    
-  // ✅ NUEVA LÓGICA: Determinar si el usuario es administrador
-  const isAdmin = user && user.role === 'admin';
+    const { user } = useAuth();
+    const canEdit = ['admin', 'talento'].includes(user?.role);
 
-  // Función para obtener los documentos
-  const fetchDocuments = async () => {
-    if (!token) {
-      setError("Sesión no válida. Inicie sesión.");
-      return;
-    }
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
 
-    setLoading(true);
-    try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      
-      const response = await API.get("/documents", config);
-      
-      setDocuments(response.data);
-      setError("");
-    } catch (err) {
-      console.error("Error al cargar documentos:", err);
-      setError(
-        "Fallo al cargar los documentos. Verifique su conexión y permisos."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchDocuments = async () => {
+        try {
+            const res = await API.get('/documents');
+            setDocuments(res.data);
+        } catch (error) {
+            console.error("Error cargando documentos", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  // ✅ EFECTO: Cargar documentos al montar el componente
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
 
-  // Función que se pasa al componente de subida para refrescar la lista
-  const handleUploadSuccess = () => {
-    fetchDocuments(); // Recargar la lista después de una subida exitosa
-  };
+    const handleUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-  const handleDownloadDocument = async (documentId, fileName) => {
-    if (!token) {
-      alert("Sesión expirada. Por favor, inicia sesión.");
-      return;
-    }
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        // Opcional: Podrías agregar un input para 'category' si quieres clasificar
 
-    try {
-      const response = await API({
-        url: `/documents/${documentId}/download`, 
-        method: "GET",
-        responseType: "blob", 
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        try {
+            await API.post('/documents', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            fetchDocuments(); // Recargar lista
+        } catch (error) {
+            alert("Error al subir archivo");
+        } finally {
+            setUploading(false);
+            e.target.value = null; // Resetear input
+        }
+    };
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName); 
-      document.body.appendChild(link);
-      link.click(); 
-      link.remove();
-      window.URL.revokeObjectURL(url); 
-    } catch (error) {
-      console.error("Error al descargar el documento:", error);
-      alert(
-        "Fallo la descarga del documento. Puede que el archivo haya sido eliminado del servidor."
-      );
-    }
-  };
+    const handleDelete = async (id) => {
+        if (!confirm("¿Seguro que quieres eliminar este archivo permanentemente?")) return;
+        try {
+            await API.delete(`/documents/${id}`);
+            fetchDocuments();
+        } catch (error) {
+            alert("Error al eliminar");
+        }
+    };
 
-  const handleDeleteDocument = async (documentId, fileName) => {
-    // La lógica de eliminación permanece igual, pero el botón solo se muestra a admins.
-    if (!token) {
-      alert("Sesión expirada. Por favor, inicia sesión.");
-      return;
-    }
+    // Función auxiliar para iconos según tipo
+    const getIcon = (mime) => {
+        // Aquí podrías poner iconos de Excel/PDF específicos, por ahora uno genérico
+        return <DocumentIcon className="h-8 w-8 text-gray-400" />;
+    };
 
-    if (
-      !window.confirm(
-        `¿Estás seguro de que quieres eliminar el documento "${fileName}"? Esta acción es irreversible.`
-      )
-    ) {
-      return;
-    }
+    return (
+        <div className="p-8 min-h-screen bg-gray-50 animate-fadeIn">
+            <header className="flex justify-between items-end mb-10">
+                <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-blue-100 rounded-xl text-blue-600 shadow-sm">
+                        <FolderIcon className="h-10 w-10" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-black text-prolinco-dark">Repositorio de Archivos</h1>
+                        <p className="text-gray-600 mt-1 text-lg">Documentación general y recursos descargables</p>
+                    </div>
+                </div>
 
-    try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+                {canEdit && (
+                    <div className="relative">
+                        <input 
+                            type="file" 
+                            onChange={handleUpload} 
+                            className="hidden" 
+                            id="file-upload"
+                            disabled={uploading}
+                        />
+                        <label 
+                            htmlFor="file-upload"
+                            className={`flex items-center px-6 py-3 bg-prolinco-primary text-white font-bold rounded-xl shadow-lg cursor-pointer hover:bg-yellow-500 transition-all ${uploading ? 'opacity-50 cursor-wait' : ''}`}
+                        >
+                            {uploading ? (
+                                <span>Subiendo...</span>
+                            ) : (
+                                <>
+                                    <ArrowUpTrayIcon className="h-6 w-6 mr-2" />
+                                    Subir Archivo
+                                </>
+                            )}
+                        </label>
+                    </div>
+                )}
+            </header>
 
-      await API.delete(`/documents/${documentId}`, config);
-
-      fetchDocuments();
-
-      alert(`Documento "${fileName}" eliminado con éxito.`);
-    } catch (error) {
-      console.error("Error al eliminar el documento:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Fallo al eliminar el documento. Verifique permisos o conexión.";
-      alert(errorMessage);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("es-CO");
-  };
-
-  return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-4xl font-black text-gray-800 mb-6">
-        Gestión de Archivos y Documentos
-      </h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Columna de Subida: NOTA: Podrías querer ocultar esto también si user.role !== 'admin' */}
-        <div className="lg:col-span-1">
-          {/* Aquí podrías añadir {isAdmin && <DocumentUpload ... />} */}
-          <DocumentUpload onUploadSuccess={handleUploadSuccess} />
+            {/* Tabla de Archivos */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th className="p-4 text-sm font-bold text-gray-500">Nombre</th>
+                                <th className="p-4 text-sm font-bold text-gray-500">Tipo</th>
+                                <th className="p-4 text-sm font-bold text-gray-500">Subido por</th>
+                                <th className="p-4 text-sm font-bold text-gray-500">Fecha</th>
+                                <th className="p-4 text-right text-sm font-bold text-gray-500">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {documents.map(doc => (
+                                <tr key={doc._id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="p-4">
+                                        <div className="flex items-center space-x-3">
+                                            {getIcon(doc.mimetype)}
+                                            <span className="font-medium text-gray-800">{doc.originalName}</span>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 text-sm text-gray-500 truncate max-w-[150px]">{doc.mimetype}</td>
+                                    <td className="p-4 text-sm text-gray-500">
+                                        {doc.uploadedBy?.documentNumber || 'Desconocido'}
+                                    </td>
+                                    <td className="p-4 text-sm text-gray-500">
+                                        {new Date(doc.createdAt).toLocaleDateString()}
+                                    </td>
+                                    <td className="p-4 text-right space-x-2">
+                                        <a 
+                                            href={`${import.meta.env.VITE_API_URL.replace('/api', '')}${doc.path}`} 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Descargar"
+                                        >
+                                            <ArrowDownTrayIcon className="h-5 w-5" />
+                                        </a>
+                                        {canEdit && (
+                                            <button 
+                                                onClick={() => handleDelete(doc._id)}
+                                                className="inline-flex p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Eliminar"
+                                            >
+                                                <TrashIcon className="h-5 w-5" />
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                            {documents.length === 0 && !loading && (
+                                <tr>
+                                    <td colSpan="5" className="p-10 text-center text-gray-400 italic">
+                                        No hay documentos en el repositorio.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        {/* Columna de Listado */}
-        <div className="lg:col-span-2">
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-700 mb-4">
-              Documentos Recientes
-            </h2>
-
-            {error && <div className="text-red-600 mb-4">{error}</div>}
-            {loading ? (
-              <p className="text-gray-500">Cargando documentos...</p>
-            ) : documents.length === 0 ? (
-              <p className="text-gray-500">No hay documentos subidos aún.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {/* ... (encabezados de tabla) ... */}
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nombre
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Categoría
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Subido Por
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fecha
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {documents.map((doc) => (
-                      <tr key={doc._id}>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-xs">
-                          {doc.fileName}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {doc.category}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {doc.uploadedBy.name || "N/A"}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(doc.createdAt)}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                          {/* Botón de Descarga (siempre visible para autenticados) */}
-                          <button
-                            onClick={() =>
-                              handleDownloadDocument(doc._id, doc.fileName)
-                            }
-                            className="text-prolinco-primary hover:text-prolinco-dark transition-colors mr-3"
-                            title="Descargar"
-                          >
-                            <ArrowDownTrayIcon className="h-5 w-5" />
-                          </button>
-
-                          {/* 🛑 APLICACIÓN DE LA RECOMENDACIÓN: SOLO MOSTRAR SI ES ADMIN */}
-                          {isAdmin && (
-                            <button
-                              onClick={() =>
-                                handleDeleteDocument(doc._id, doc.fileName)
-                              } 
-                              className="text-red-500 hover:text-red-700 transition-colors"
-                              title="Eliminar"
-                            >
-                              <TrashIcon className="h-5 w-5" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default FilesPage;

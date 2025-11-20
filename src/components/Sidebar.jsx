@@ -30,13 +30,6 @@ const navItems = [
         description: 'Panel principal'
     },
     {
-        name: 'Talento Humano',
-        path: '/talento-humano',
-        icon: UserGroupIcon,
-        role: ['admin', 'servicio', 'basico', 'talento'],
-        description: 'Gestión de personal'
-    },
-    {
         name: 'Servicio al Cliente',
         path: '/servicio',
         icon: TruckIcon,
@@ -44,11 +37,11 @@ const navItems = [
         description: 'Servicio al cliente'
     },
     {
-        name: 'Gestión de Archivos',
-        path: '/archivos',
-        icon: FolderIcon,
-        role: ['admin', 'talento', 'servicio'],
-        description: 'Documentos y recursos'
+        name: 'Talento Humano',
+        path: '/talento-humano',
+        icon: UserGroupIcon,
+        role: ['admin', 'servicio', 'basico', 'talento'],
+        description: 'Gestión de personal'
     },
     { 
         name: 'Administración', 
@@ -56,6 +49,13 @@ const navItems = [
         icon: BuildingStorefrontIcon, 
         role: ['admin'],
         description: 'Configuración estratégica'
+    },
+    {
+        name: 'Archivistica',
+        path: '/archivos',
+        icon: FolderIcon,
+        role: ['admin', 'talento', 'servicio'],
+        description: 'Documentos y recursos'
     },
     { 
         name: 'Gestión de Usuarios', 
