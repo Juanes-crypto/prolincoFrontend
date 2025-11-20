@@ -1,207 +1,100 @@
-// frontend/src/pages/Login.jsx (VERSIÓN FINAL Y CORREGIDA)
-
 import React, { useState, useContext } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContextDefinition';
-import { API } from '../api/api'; 
+import { API } from '../api/api';
 
 const Login = () => {
-    // 🌟 1. USAR EL CONTEXTO Y SUS FUNCIONES 🌟
-    const { user, login } = useContext(AuthContext); // Obtenemos el user y la función login
+    const { login } = useContext(AuthContext);
+    const navigate = useNavigate();
     
-    // Estados existentes
-    const [documentNumber, setDocumentNumber] = useState('');
-    const [password, setPassword] = useState('');
-    const [documentType, setDocumentType] = useState('CC'); 
     const [isRegistering, setIsRegistering] = useState(false);
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    
-    // *** ESTADOS NUEVOS ***
+    const [error, setError] = useState('');
+
+    // Campos
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    
-    // 🌟 2. CORRECCIÓN DEL BUCLE (Línea 25 anterior) 🌟
-    // Si el estado de React/Context ya tiene un usuario, redirigir al Dashboard.
-    if (user) {
-        // Redirige al inicio. El AuthGuard se encargará de enviarlo a /cambio-contrasena si es nuevo.
-        return <Navigate to="/" replace />; 
-    }
+    const [documentType, setDocumentType] = useState('CC');
+    const [documentNumber, setDocumentNumber] = useState('');
+    const [password, setPassword] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
+
+        const endpoint = isRegistering ? '/auth/register' : '/auth/login';
         
+        // Preparamos datos. Si es registro, NO enviamos password (el backend lo pone igual al documento)
+        const payload = isRegistering 
+            ? { name, email, documentType, documentNumber } 
+            : { documentNumber, password };
+
         try {
-            const endpoint = isRegistering ? 'register' : 'login';
+            const { data } = await API.post(endpoint, payload);
             
-            let payload = {};
-
-            if (isRegistering) {
-                // Payload para REGISTRO (Mantenemos la contraseña inicial como docNumber)
-                payload = { 
-                    name,
-                    email,
-                    documentType, 
-                    documentNumber, 
-                    password: documentNumber // Contraseña es el mismo número por requisito
-                };
-            } else {
-                // Payload para LOGIN
-                payload = { documentNumber, password };
-            }
+            // data.user contiene la info del usuario
+            // data.token contiene el token
             
-            // 🌟 MODIFICACIÓN CLAVE: USAR EL CLIENTE API IMPORTADO 🌟
-            const { data } = await API.post(`/auth/${endpoint}`, payload); // ✅ Petición con el cliente API
-
-            // 🌟 3. USAR LA FUNCIÓN 'login' DEL CONTEXTO EN LUGAR DE LOCALSTORAGE 🌟
-            // Esto actualiza el estado 'user' globalmente y guarda token/user en localStorage
+            // 1. Guardar sesión
             login(data.user, data.token);
 
-            // Redirigir al dashboard (ya que el estado se actualizó, el AuthGuard se encargará)
-            // No necesitamos window.location.href, solo el contexto se actualiza y React lo maneja.
-            // La redirección ocurrirá automáticamente gracias al "if (user)" de arriba
-            // o gracias al AuthGuard en la ruta /.
-            // Para registro, no redirigir inmediatamente, dejar que el AuthGuard maneje la lógica
+            // 2. Decidir a dónde ir
+            // Usamos setTimeout para asegurar que el estado se guardó
+            setTimeout(() => {
+                if (data.user.isPasswordSet === false) {
+                    console.log("Usuario nuevo -> A cambiar contraseña");
+                    navigate('/cambiar-password');
+                } else {
+                    console.log("Usuario antiguo -> Al Dashboard");
+                    navigate('/');
+                }
+            }, 100);
 
         } catch (err) {
-            setError(err.response?.data?.message || 'Error de conexión o credenciales inválidas.');
+            console.error(err);
+            setError(err.response?.data?.message || "Error de conexión");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSwitchMode = () => {
-        setIsRegistering(!isRegistering);
-        setError('');
-        // Limpiamos todos los campos al cambiar de modo
-        setDocumentNumber('');
-        setPassword('');
-        setDocumentType('CC');
-        setName('');
-        setEmail('');
-    };
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-prolinco-secondary p-4">
-            
-            {/* Tarjeta Flotante y Dinámica */}
-            <div className={`bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-700 ease-in-out ${isRegistering ? 'scale-105' : 'scale-100'} border-t-8 border-prolinco-primary`}>
-                
-                <h2 className="text-3xl font-black text-prolinco-dark mb-2 text-center">
-                    {isRegistering ? 'Registro Prolinco' : 'Acceso Prolinco'}
+            <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-prolinco-primary transition-all">
+                <h2 className="text-3xl font-black text-prolinco-dark mb-6 text-center">
+                    {isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión'}
                 </h2>
-                <p className="text-center text-gray-500 mb-8">
-                    Portal Estratégico de Intervención Empresarial
-                </p>
 
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <span className="block sm:inline">{error}</span>
-                    </div>
-                )}
+                {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    
-                    {/* *** CAMPOS EXCLUSIVOS DE REGISTRO *** */}
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {isRegistering && (
                         <>
-                            {/* Nombre Completo */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                                <input
-                                    type="text"
-                                    placeholder="Nombre y Apellido"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                    className="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:ring-prolinco-primary focus:border-prolinco-primary transition duration-150"
-                                />
-                            </div>
-
-                            {/* Email */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-                                <input
-                                    type="email"
-                                    placeholder="ejemplo@empresa.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:ring-prolinco-primary focus:border-prolinco-primary transition duration-150"
-                                />
-                            </div>
-                            
-                            {/* Tipo de Documento */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-                                <select 
-                                    value={documentType}
-                                    onChange={(e) => setDocumentType(e.target.value)}
-                                    className="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:ring-prolinco-primary focus:border-prolinco-primary transition duration-150"
-                                >
-                                    <option value="CC">Cédula de Ciudadanía (CC)</option>
-                                    <option value="TI">Tarjeta de Identidad (TI)</option>
-                                    <option value="CE">Cédula de Extranjería (CE)</option>
-                                    <option value="NIT">NIT</option>
-                                </select>
-                            </div>
+                            <input type="text" placeholder="Nombre Completo" className="w-full p-3 border rounded-xl" value={name} onChange={e => setName(e.target.value)} required />
+                            <input type="email" placeholder="Correo" className="w-full p-3 border rounded-xl" value={email} onChange={e => setEmail(e.target.value)} required />
+                            <select className="w-full p-3 border rounded-xl" value={documentType} onChange={e => setDocumentType(e.target.value)}>
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="TI">Tarjeta de Identidad</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                            </select>
                         </>
                     )}
-                    {/* *** FIN CAMPOS EXCLUSIVOS DE REGISTRO *** */}
 
+                    <input type="text" placeholder="Número de Documento" className="w-full p-3 border rounded-xl" value={documentNumber} onChange={e => setDocumentNumber(e.target.value)} required />
 
-                    {/* Número de Documento (Común a Login y Registro) */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Número de Documento</label>
-                        <input
-                            type="text"
-                            placeholder="Ej: 102345678"
-                            value={documentNumber}
-                            onChange={(e) => setDocumentNumber(e.target.value)}
-                            className="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:ring-prolinco-primary focus:border-prolinco-primary transition duration-150"
-                            required
-                        />
-                    </div>
-
-                    {/* Contraseña (Solo en Login) */}
                     {!isRegistering && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-                            <input
-                                type="password"
-                                placeholder="Contraseña"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:ring-prolinco-primary focus:border-prolinco-primary transition duration-150"
-                                required
-                            />
-                        </div>
+                        <input type="password" placeholder="Contraseña" className="w-full p-3 border rounded-xl" value={password} onChange={e => setPassword(e.target.value)} required />
                     )}
 
-                    {/* Botón Principal */}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full py-3 px-4 rounded-xl text-lg font-bold text-prolinco-dark transition duration-300 shadow-xl 
-                            ${loading ? 'bg-gray-300' : 'bg-prolinco-primary hover:bg-yellow-400 hover:shadow-2xl'}`}
-                    >
-                        {loading ? 'Cargando...' : (isRegistering ? 'Registrarme (Contraseña = Documento)' : 'Iniciar Sesión')}
+                    <button disabled={loading} className="w-full py-3 bg-prolinco-primary font-bold rounded-xl hover:bg-yellow-400 transition-colors">
+                        {loading ? 'Procesando...' : (isRegistering ? 'Registrarme' : 'Entrar')}
                     </button>
                 </form>
 
-                {/* Switch Registro/Login */}
-                <p className="mt-6 text-center text-sm text-gray-500">
-                    {isRegistering ? '¿Ya tienes cuenta?' : '¿Eres nuevo?'}
-                    <button 
-                        type="button" 
-                        onClick={handleSwitchMode} // Usamos la función auxiliar
-                        className="ml-2 font-semibold text-prolinco-secondary hover:text-prolinco-primary transition duration-150"
-                    >
-                        {isRegistering ? 'Inicia Sesión' : 'Regístrate'}
-                    </button>
-                </p>
+                <button onClick={() => { setIsRegistering(!isRegistering); setError(''); }} className="w-full mt-4 text-sm text-gray-500 hover:text-prolinco-secondary">
+                    {isRegistering ? '¿Ya tienes cuenta? Inicia Sesión' : '¿Eres nuevo? Regístrate'}
+                </button>
             </div>
         </div>
     );
