@@ -1,6 +1,6 @@
 // frontend/src/App.jsx - VERSIÓN CORREGIDA
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     BrowserRouter as Router,
     Routes,
@@ -10,10 +10,10 @@ import {
 } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import ChangePasswordPage from "./pages/ChangePassword";
-import Login from "./pages/Login"; 
+import Login from "./pages/Login";
 import UserManagement from "./pages/UserManagement";
 import FilesPage from './pages/FilesPage';
-import AuditPage from './pages/AuditPage'; 
+import AuditPage from './pages/AuditPage';
 
 // 🌟 PÁGINAS INDIVIDUALES
 import ClientePage from './pages/ClientePage';
@@ -21,7 +21,7 @@ import TalentoHumanoPage from './pages/TalentoHumanoPage';
 import AdministracionPage from './pages/AdministracionPage';
 
 // 🌟 COMPONENTES
-import Sidebar from "./components/Sidebar"; 
+import Sidebar from "./components/Sidebar";
 import AuthGuard from "./components/AuthGuard";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 
@@ -31,13 +31,39 @@ import useOperationalData from './hooks/useOperationalData';
 // ✅ NUEVO: import hooks de sesión
 import { useSessionTimeout, useTabCloseListener } from './hooks/useSessionTimeout';
 
-const MainLayout = () => {
+const MainLayout = ({ sidebarOpen, setSidebarOpen }) => {
     return (
         <div className="flex min-h-screen bg-prolinco-light">
-            <Sidebar />
-            <main className="flex-1 p-8 overflow-y-auto">
-                <Outlet /> 
-            </main>
+            {/* Sidebar - Hidden on mobile, toggleable */}
+            <div className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+                <div className="relative flex w-80 flex-col">
+                    <Sidebar onClose={() => setSidebarOpen(false)} />
+                </div>
+            </div>
+
+            {/* Overlay for mobile */}
+            {sidebarOpen && (
+                <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" onClick={() => setSidebarOpen(false)}></div>
+            )}
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+                {/* Hamburger Menu for Mobile */}
+                <div className="lg:hidden p-4 bg-white border-b border-gray-200">
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 };
