@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { API } from '../api/api';
-import { 
-    LinkIcon, 
-    DocumentArrowUpIcon, 
-    ArrowTopRightOnSquareIcon, 
+import {
+    LinkIcon,
+    DocumentArrowUpIcon,
+    ArrowTopRightOnSquareIcon,
     TrashIcon,
-    PencilSquareIcon 
+    PencilSquareIcon
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../context/AuthProvider';
 
@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthProvider';
 const ToolCard = ({ tool, onUpdate }) => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
-    
+
     const [isEditing, setIsEditing] = useState(false);
     const [urlInput, setUrlInput] = useState(tool.urlValue || '');
     const [fileInput, setFileInput] = useState(null);
@@ -22,10 +22,30 @@ const ToolCard = ({ tool, onUpdate }) => {
     // Determinar si está configurada
     const isConfigured = (tool.config.allowsUrl && tool.urlValue) || (tool.config.allowsFile && tool.fileUrl);
 
+    const isOfficeFile = (filename) => {
+        if (!filename) return false;
+        const lower = filename.toLowerCase();
+        return lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.ppt') || lower.endsWith('.pptx');
+    };
+
+    // Lógica para generar la URL correcta
+    const getFileUrl = () => {
+        if (!tool.fileUrl) return '#';
+
+        // Si es Office, usamos el visor de Microsoft
+        if (isOfficeFile(tool.originalFileName)) {
+            // encodeURIComponent es vital para que la URL pase bien como parámetro
+            return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(tool.fileUrl)}`;
+        }
+
+        // Si es PDF o Imagen, URL directa
+        return tool.fileUrl;
+    };
+
     const handleSave = async () => {
         setLoading(true);
         const formData = new FormData();
-        
+
         if (tool.config.allowsUrl) formData.append('urlValue', urlInput);
         if (tool.config.allowsFile && fileInput) formData.append('file', fileInput);
 
@@ -44,7 +64,7 @@ const ToolCard = ({ tool, onUpdate }) => {
     };
 
     const handleDelete = async () => {
-        if(!confirm("¿Estás seguro de eliminar esta herramienta?")) return;
+        if (!confirm("¿Estás seguro de eliminar esta herramienta?")) return;
         try {
             await API.delete(`/tools/${tool._id}`);
             onUpdate();
@@ -59,17 +79,17 @@ const ToolCard = ({ tool, onUpdate }) => {
             <div className="bg-white p-5 rounded-xl shadow-lg border-2 border-prolinco-primary/20 animate-fadeIn">
                 <div className="flex justify-between items-start mb-3">
                     <h3 className="font-bold text-gray-800">{tool.title}</h3>
-                    {isAdmin && <button onClick={handleDelete}><TrashIcon className="h-4 w-4 text-red-400 hover:text-red-600"/></button>}
+                    {isAdmin && <button onClick={handleDelete}><TrashIcon className="h-4 w-4 text-red-400 hover:text-red-600" /></button>}
                 </div>
-                
+
                 <div className="space-y-3">
                     {tool.config.allowsUrl && (
                         <div>
                             <label className="text-xs font-bold text-gray-500">URL / Enlace</label>
                             <div className="flex items-center border rounded-lg px-2 bg-gray-50">
-                                <LinkIcon className="h-4 w-4 text-gray-400 mr-2"/>
-                                <input 
-                                    type="url" 
+                                <LinkIcon className="h-4 w-4 text-gray-400 mr-2" />
+                                <input
+                                    type="url"
                                     value={urlInput}
                                     onChange={(e) => setUrlInput(e.target.value)}
                                     className="w-full bg-transparent p-2 text-sm outline-none"
@@ -83,9 +103,9 @@ const ToolCard = ({ tool, onUpdate }) => {
                         <div>
                             <label className="text-xs font-bold text-gray-500">Archivo (Excel, PDF, Word)</label>
                             <div className="flex items-center border rounded-lg px-2 bg-gray-50 py-1">
-                                <DocumentArrowUpIcon className="h-4 w-4 text-gray-400 mr-2"/>
-                                <input 
-                                    type="file" 
+                                <DocumentArrowUpIcon className="h-4 w-4 text-gray-400 mr-2" />
+                                <input
+                                    type="file"
                                     onChange={(e) => setFileInput(e.target.files[0])}
                                     className="w-full text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                 />
@@ -96,8 +116,8 @@ const ToolCard = ({ tool, onUpdate }) => {
 
                     <div className="flex justify-end gap-2 mt-4">
                         {isConfigured && <button onClick={() => setIsEditing(false)} className="text-xs text-gray-500 underline">Cancelar</button>}
-                        <button 
-                            onClick={handleSave} 
+                        <button
+                            onClick={handleSave}
                             disabled={loading}
                             className="bg-prolinco-primary text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-yellow-500 transition-colors"
                         >
@@ -120,7 +140,7 @@ const ToolCard = ({ tool, onUpdate }) => {
                     <p className="text-sm text-gray-500 mt-1 leading-snug">{tool.description}</p>
                 </div>
                 <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-prolinco-primary/10 transition-colors">
-                    {tool.config.allowsFile ? <DocumentArrowUpIcon className="h-6 w-6 text-gray-400 group-hover:text-prolinco-primary"/> : <LinkIcon className="h-6 w-6 text-gray-400 group-hover:text-prolinco-primary"/>}
+                    {tool.config.allowsFile ? <DocumentArrowUpIcon className="h-6 w-6 text-gray-400 group-hover:text-prolinco-primary" /> : <LinkIcon className="h-6 w-6 text-gray-400 group-hover:text-prolinco-primary" />}
                 </div>
             </div>
 
@@ -129,20 +149,22 @@ const ToolCard = ({ tool, onUpdate }) => {
                 {tool.config.allowsUrl && tool.urlValue && (
                     <a href={tool.urlValue} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-2.5 bg-prolinco-secondary text-white rounded-lg font-medium text-sm hover:bg-blue-900 transition-colors shadow-sm hover:shadow">
                         <span>Abrir Enlace</span>
-                        <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-2"/>
+                        <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-2" />
                     </a>
                 )}
 
                 {/* Botón Archivo */}
                 {tool.config.allowsFile && tool.fileUrl && (
-                    <a 
-                        href={`${import.meta.env.VITE_API_URL.replace('/api', '')}${tool.fileUrl}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" // Esto descarga Excel o abre PDF
+                    <a
+                        href={getFileUrl()} // 👈 Usamos la función inteligente
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center justify-center w-full py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
                     >
-                        <span>{tool.originalFileName?.endsWith('xls') || tool.originalFileName?.endsWith('xlsx') ? 'Descargar Excel' : 'Ver Documento'}</span>
-                        <DocumentArrowUpIcon className="h-4 w-4 ml-2"/>
+                        <span>
+                            {isOfficeFile(tool.originalFileName) ? 'Abrir Documento' : 'Ver Archivo'}
+                        </span>
+                        <DocumentArrowUpIcon className="h-4 w-4 ml-2" />
                     </a>
                 )}
 
@@ -155,11 +177,11 @@ const ToolCard = ({ tool, onUpdate }) => {
 
             {/* Botón Flotante Editar (Solo Admin) */}
             {isAdmin && (
-                <button 
+                <button
                     onClick={() => setIsEditing(true)}
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-full shadow-md text-gray-400 hover:text-prolinco-secondary transition-all"
                 >
-                    <PencilSquareIcon className="h-4 w-4"/>
+                    <PencilSquareIcon className="h-4 w-4" />
                 </button>
             )}
         </div>

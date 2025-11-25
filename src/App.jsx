@@ -31,12 +31,17 @@ import useOperationalData from './hooks/useOperationalData';
 // ✅ NUEVO: import hooks de sesión
 import { useSessionTimeout, useTabCloseListener } from './hooks/useSessionTimeout';
 
-const MainLayout = ({ sidebarOpen, setSidebarOpen }) => {
+
+// 🛠️ CORRECCIÓN: El estado ahora vive DENTRO del componente
+const MainLayout = () => {
+    const [sidebarOpen, setSidebarOpen] = useState(false); // 👈 AGREGAR ESTADO AQUÍ
+
     return (
         <div className="flex min-h-screen bg-prolinco-light">
-            {/* Sidebar - Hidden on mobile, toggleable */}
+            {/* Sidebar */}
             <div className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
                 <div className="relative flex w-80 flex-col">
+                    {/* Pasamos la función para cerrar al Sidebar si tiene botón de cerrar */}
                     <Sidebar onClose={() => setSidebarOpen(false)} />
                 </div>
             </div>
@@ -48,7 +53,7 @@ const MainLayout = ({ sidebarOpen, setSidebarOpen }) => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
-                {/* Hamburger Menu for Mobile */}
+                {/* Hamburger Menu */}
                 <div className="lg:hidden p-4 bg-white border-b border-gray-200">
                     <button
                         onClick={() => setSidebarOpen(true)}
