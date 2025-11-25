@@ -1,4 +1,4 @@
-// frontend/src/pages/FilesPage.jsx (VERSIÓN FINAL CON VISOR ONLINE)
+// frontend/src/pages/FilesPage.jsx (VERSIÓN FINAL - VISOR OFFICE ONLINE)
 
 import React, { useState, useEffect } from 'react';
 import { API } from '../api/api';
@@ -9,7 +9,7 @@ import {
     TrashIcon, 
     DocumentIcon,
     ArrowDownTrayIcon,
-    EyeIcon 
+    EyeIcon // 👁️ Nuevo ícono para visualizar
 } from '@heroicons/react/24/solid';
 
 const FilesPage = () => {
@@ -47,12 +47,12 @@ const FilesPage = () => {
             await API.post('/documents', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            fetchDocuments(); 
+            fetchDocuments(); // Recargar lista
         } catch (error) {
             alert("Error al subir archivo");
         } finally {
             setUploading(false);
-            e.target.value = null; 
+            e.target.value = null; // Resetear input
         }
     };
 
@@ -70,7 +70,7 @@ const FilesPage = () => {
         return <DocumentIcon className="h-8 w-8 text-gray-400" />;
     };
 
-    // 🌟 FUNCIÓN HELPER PARA DETECTAR OFFICE (Igual que en DynamicTools)
+    // 🌟 FUNCIÓN HELPER PARA DETECTAR OFFICE
     const isOfficeFile = (filename) => {
         if (!filename) return false;
         const lower = filename.toLowerCase();
